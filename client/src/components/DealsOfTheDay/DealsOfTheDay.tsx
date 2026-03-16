@@ -80,6 +80,20 @@ const dealProducts: Product[] = [
     label: 'Exchange Offer',
     labelColor: '#fb641b',
   },
+  {
+    id: 43,
+    name: 'Sony Noise Cancelling Headphones',
+    image: headphonesImg,
+    price: 149,
+    originalPrice: 249,
+    discount: 40,
+    rating: 4.5,
+    reviews: 1204,
+    badge: '-40%',
+    badgeColor: '#ff6161',
+    label: 'Free Delivery',
+    labelColor: '#388e3c',
+  },
 ];
 
 function useCountdown(targetHours = 14, targetMinutes = 23, targetSeconds = 51) {
@@ -130,36 +144,36 @@ export default function DealsOfTheDay() {
   const pad = (n: number) => String(n).padStart(2, '0');
 
   return (
-    <section id="deals-section" className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+    <section id="deals-section" className="max-w-350 mx-auto px-4 lg:px-6 py-6">
       <div className="bg-white rounded-2xl shadow-card p-5 sm:p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+        <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-5 w-full sm:w-auto">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 text-center sm:text-left">
               Deals of the Day
             </h2>
-            <div className="flex items-center gap-2 text-sm font-mono">
-              <Flame size={16} className="text-danger" />
-              <div className="flex items-center gap-1">
-                <span className="bg-gray-900 text-white px-2 py-1 rounded-md text-sm font-bold">
+            <div className="flex items-center gap-2 text-sm font-mono bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+              <Flame size={16} className="text-danger animate-pulse" />
+              <div className="flex items-center gap-1.5">
+                <span className="bg-gray-900 text-white px-2 py-0.5 rounded text-sm font-bold min-w-[28px] text-center">
                   {pad(hours)}
                 </span>
                 <span className="text-gray-400 font-bold">:</span>
-                <span className="bg-gray-900 text-white px-2 py-1 rounded-md text-sm font-bold">
+                <span className="bg-gray-900 text-white px-2 py-0.5 rounded text-sm font-bold min-w-[28px] text-center">
                   {pad(minutes)}
                 </span>
                 <span className="text-gray-400 font-bold">:</span>
-                <span className="bg-gray-900 text-white px-2 py-1 rounded-md text-sm font-bold">
+                <span className="bg-gray-900 text-white px-2 py-0.5 rounded text-sm font-bold min-w-[28px] text-center">
                   {pad(seconds)}
                 </span>
               </div>
-              <span className="text-gray-400 text-xs">Left</span>
+              <span className="text-gray-500 text-[10px] font-bold uppercase tracking-tighter">Left</span>
             </div>
           </div>
 
           <button
             id="view-all-deals"
-            className="px-5 py-2 bg-primary hover:bg-primary-dark text-white text-sm font-semibold rounded-lg transition-colors duration-150"
+            className="w-full sm:w-auto px-6 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-bold rounded-lg transition-all shadow-sm active:scale-95"
           >
             View All Deals
           </button>

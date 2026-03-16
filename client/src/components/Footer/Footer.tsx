@@ -26,13 +26,6 @@ const helpLinks = [
   'Report Infringement',
 ];
 
-const policyLinks = [
-  'Return Policy',
-  'Terms of Use',
-  'Security',
-  'Privacy',
-  'Sitemap',
-];
 
 export default function Footer() {
   return (
@@ -108,27 +101,27 @@ export default function Footer() {
           </div>
 
           {/* Newsletter */}
-          <div>
-            <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">
+          <div className="lg:col-span-1">
+            <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4 text-center sm:text-left">
               Newsletter
             </h3>
-            <p className="text-sm text-gray-400 mb-4">
-              Subscribe to our newsletter to get updates on our latest offers!
+            <p className="text-sm text-gray-400 mb-4 text-center sm:text-left">
+              Subscribe to our newsletter for latest updates & offers!
             </p>
             <form
-              className="flex flex-col gap-2.5"
+              className="flex flex-col gap-3"
               onSubmit={(e) => e.preventDefault()}
             >
               <input
                 id="newsletter-email"
                 type="email"
                 placeholder="Your email address"
-                className="px-4 py-2.5 rounded-lg bg-gray-700 border border-gray-600 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-1 focus:ring-primary transition-colors duration-150"
+                className="px-4 py-3 rounded-xl bg-gray-700/50 border border-gray-600 text-sm text-white placeholder:text-gray-500 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none"
               />
               <button
                 id="newsletter-subscribe"
                 type="submit"
-                className="px-4 py-2.5 bg-accent hover:bg-accent-dark text-white rounded-lg text-sm font-semibold transition-colors duration-150"
+                className="px-4 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl text-sm font-bold transition-all shadow-md active:scale-95"
               >
                 Subscribe
               </button>
@@ -138,40 +131,37 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-gray-700">
-        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
+      <div className="border-t border-gray-700/50 bg-gray-900/30">
+        <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div className="flex flex-wrap justify-center lg:justify-start items-center gap-x-6 gap-y-3 text-sm font-medium text-gray-400">
               <a
                 href="#"
-                className="flex items-center gap-1.5 hover:text-white transition-colors"
+                className="flex items-center gap-2 hover:text-white transition-colors"
               >
-                <Store size={14} /> Become a Seller
+                <Store size={16} className="text-primary" /> Become a Seller
               </a>
-              <span className="text-gray-600">|</span>
               <a
                 href="#"
-                className="flex items-center gap-1.5 hover:text-white transition-colors"
+                className="flex items-center gap-2 hover:text-white transition-colors"
               >
-                <Megaphone size={14} /> Advertise
+                <Megaphone size={16} className="text-primary" /> Advertise
               </a>
-              <span className="text-gray-600">|</span>
               <a
                 href="#"
-                className="flex items-center gap-1.5 hover:text-white transition-colors"
+                className="flex items-center gap-2 hover:text-white transition-colors"
               >
-                <Gift size={14} /> Gift Cards
+                <Gift size={16} className="text-primary" /> Gift Cards
               </a>
-              <span className="text-gray-600 hidden sm:inline">|</span>
               <a
                 href="#"
-                className="flex items-center gap-1.5 hover:text-white transition-colors"
+                className="flex items-center gap-2 hover:text-white transition-colors"
               >
-                <HelpCircle size={14} /> Help Center
+                <HelpCircle size={16} className="text-primary" /> Help Center
               </a>
             </div>
-            <p className="text-xs text-gray-500">
-              © 2007-2025 Zepkart.com. All rights reserved.
+            <p className="text-xs text-gray-500 font-medium">
+              © 2007-2026 Zepkart. All rights reserved.
             </p>
           </div>
         </div>
