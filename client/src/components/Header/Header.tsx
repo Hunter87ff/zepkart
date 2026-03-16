@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 const categories = [
-    'Mobiles',
+    "For You", //default selected
     'Fashion',
     'Home & Furniture',
     'Electronics',
