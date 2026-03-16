@@ -165,10 +165,10 @@ export default function CartPage() {
                         {/* Price */}
                         <div className="flex items-baseline gap-2 mt-3">
                           <span className="text-sm text-gray-400 line-through">
-                            ${item.originalPrice.toFixed(2)}
+                            ₹{item.originalPrice.toFixed(2)}
                           </span>
                           <span className="text-lg font-bold text-gray-900">
-                            ${item.price.toFixed(2)}
+                            ₹{item.price.toFixed(2)}
                           </span>
                           <span className="text-sm font-semibold text-success">
                             {item.discount}% Off
@@ -237,13 +237,13 @@ export default function CartPage() {
                       Price ({totalItems} items)
                     </span>
                     <span className="text-gray-900 font-medium">
-                      ${totalPrice.toFixed(2)}
+                      ₹{totalPrice.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-success">Discount</span>
                     <span className="text-success font-medium">
-                      -${totalDiscount.toFixed(2)}
+                      -₹{totalDiscount.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -256,11 +256,11 @@ export default function CartPage() {
 
                 <div className="flex justify-between text-base font-bold text-gray-900 mb-3">
                   <span>Total Amount</span>
-                  <span>${totalAmount.toFixed(2)}</span>
+                  <span>₹{totalAmount.toFixed(2)}</span>
                 </div>
 
                 <p className="text-sm text-success font-medium mb-5">
-                  You will save ${totalDiscount.toFixed(2)} on this order
+                  You will save ₹{totalDiscount.toFixed(2)} on this order
                 </p>
 
                 <button

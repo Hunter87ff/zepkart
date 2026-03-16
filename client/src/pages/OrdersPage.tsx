@@ -185,7 +185,7 @@ export default function OrdersPage() {
                             {item.name}
                           </h4>
                           <p className="text-sm text-gray-500 mt-0.5">
-                            Qty: {item.quantity} · ${item.price.toFixed(2)}
+                            Qty: {item.quantity} · ₹{item.price.toFixed(2)}
                           </p>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
@@ -208,7 +208,7 @@ export default function OrdersPage() {
                     <span className="text-sm text-gray-500">
                       Total:{' '}
                       <span className="font-bold text-gray-900">
-                        ${order.total.toFixed(2)}
+                        ₹{order.total.toFixed(2)}
                       </span>
                     </span>
                     <button className="text-sm font-semibold text-primary hover:text-primary-dark transition-colors">

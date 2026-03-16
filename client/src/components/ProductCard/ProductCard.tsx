@@ -68,9 +68,9 @@ export default function ProductCard({
           {label || 'Free Delivery'}
         </p>
         <div className="flex items-baseline gap-2">
-          <span className="text-lg font-bold text-gray-900">${price}</span>
+          <span className="text-lg font-bold text-gray-900">₹{price}</span>
           <span className="text-sm text-gray-400 line-through">
-            ${originalPrice}
+            ₹{originalPrice}
           </span>
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function ProductCard({
           <div className="flex items-baseline gap-1.5">
             <span className="text-base font-bold text-gray-900">${price}</span>
             <span className="text-xs text-gray-400 line-through">
-              ${originalPrice}
+              ₹{originalPrice}
             </span>
           </div>
           <button className="w-8 h-8 rounded-lg bg-primary hover:bg-primary-dark text-white flex items-center justify-center transition-all duration-150 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0">
