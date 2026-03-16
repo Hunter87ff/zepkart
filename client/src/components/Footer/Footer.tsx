@@ -11,19 +11,17 @@ import {
 } from 'lucide-react';
 
 const aboutLinks = [
-  'Contact Us',
-  'About Us',
-  'Careers',
-  'Zepkart Stories',
-  'Corporate Information',
+  { name: 'Contact Us', path: '/contact' },
+  { name: 'About Us', path: '/about' },
+  { name: 'Careers', path: '/careers' },
 ];
 
 const helpLinks = [
-  'Payments',
-  'Shipping',
-  'Cancellation & Returns',
-  'FAQ',
-  'Report Infringement',
+  { name: 'Shipping', path: '/shipping' },
+  { name: 'Cancellation & Returns', path: '/return-policy' },
+  { name: 'Terms & Conditions', path: '/terms' },
+  { name: 'Privacy Policy', path: '/privacy' },
+  { name: 'FAQ', path: '/faq' },
 ];
 
 
@@ -69,13 +67,13 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2.5">
               {aboutLinks.map((link) => (
-                <li key={link}>
-                  <a
-                    href="#"
+                <li key={link.name}>
+                  <Link
+                    to={link.path}
                     className="text-sm text-gray-400 hover:text-primary transition-colors duration-150"
                   >
-                    {link}
-                  </a>
+                    {link.name}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -88,13 +86,13 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2.5">
               {helpLinks.map((link) => (
-                <li key={link}>
-                  <a
-                    href="#"
+                <li key={link.name}>
+                  <Link
+                    to={link.path}
                     className="text-sm text-gray-400 hover:text-primary transition-colors duration-150"
                   >
-                    {link}
-                  </a>
+                    {link.name}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -135,30 +133,30 @@ export default function Footer() {
         <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="flex flex-wrap justify-center lg:justify-start items-center gap-x-6 gap-y-3 text-sm font-medium text-gray-400">
-              <a
-                href="#"
+              <Link
+                to="/become-seller"
                 className="flex items-center gap-2 hover:text-white transition-colors"
               >
                 <Store size={16} className="text-primary" /> Become a Seller
-              </a>
-              <a
-                href="#"
+              </Link>
+              <Link
+                to="/contact"
                 className="flex items-center gap-2 hover:text-white transition-colors"
               >
                 <Megaphone size={16} className="text-primary" /> Advertise
-              </a>
-              <a
-                href="#"
+              </Link>
+              <Link
+                to="/faq"
                 className="flex items-center gap-2 hover:text-white transition-colors"
               >
                 <Gift size={16} className="text-primary" /> Gift Cards
-              </a>
-              <a
-                href="#"
+              </Link>
+              <Link
+                to="/help-center"
                 className="flex items-center gap-2 hover:text-white transition-colors"
               >
                 <HelpCircle size={16} className="text-primary" /> Help Center
-              </a>
+              </Link>
             </div>
             <p className="text-xs text-gray-500 font-medium">
               © 2007-2026 Zepkart. All rights reserved.
