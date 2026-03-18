@@ -1,4 +1,4 @@
-import { cloudinaryConfig } from '@config/config';
+import { cloudinary as cloudinaryConfig} from '@/config';
 import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({

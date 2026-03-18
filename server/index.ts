@@ -1,1 +1,6 @@
-console.log("Hello via Bun!");
+import "dotenv/config";
+import ZepKart from './src/app';
+
+const server = new ZepKart();
+
+server.start();

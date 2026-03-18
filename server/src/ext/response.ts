@@ -1,5 +1,5 @@
-import { Response } from 'express';
-import { appConfig } from '@/config/config';
+import type { Response } from 'express';
+import config from '@/config';
 
 class ResponseHandler {
     async forbidden(res: Response, message: any = 'Forbidden', data: any = {}) {
@@ -36,7 +36,7 @@ class ResponseHandler {
             message: message,
             data: data,
         });
-        appConfig.debug_mode && res.logger.error(message, data);
+        config.debug_mode && res.logger.error(message, data);
     }
 
     async success(res: Response, message: any = 'Success', data: any = {}) {

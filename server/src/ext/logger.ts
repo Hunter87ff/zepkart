@@ -35,7 +35,7 @@ class Logger {
     levels = LoggerLevel;
 
     // Default log level is DEBUG
-    level: number = this.levels.DEBUG;
+    level: number = this.levels.INFO;
 
     static instance = new Logger();
 
@@ -77,7 +77,7 @@ class Logger {
             console.error(this.format('fatal', ...args));
         }
     }
-    async setLevel(level: number) {
+    setLevel(level: number) {
         if (Object.values(LoggerLevel).includes(level)) {
             this.level = level;
         } else {
@@ -86,7 +86,9 @@ class Logger {
     }
 }
 
-export { Logger, LoggerLevel };
+
+const logger = Logger.instance;
+export {logger,  Logger, LoggerLevel };
 
 // Usage example
 // const logger = Logger.instance;

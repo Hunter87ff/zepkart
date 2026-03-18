@@ -1,42 +1,4 @@
-class OtpCache {
-    private cache: Map<string, number>;
 
-    constructor() {
-        this.cache = new Map();
-    }
-
-    set(key: string, ttl: number) {
-        const expireAt = Date.now() + ttl * 1000;
-        this.cache.set(key, expireAt);
-    }
-
-    has(key: string): boolean {
-        const expireAt = this.cache.get(key);
-        if (expireAt && Date.now() < expireAt) {
-            this.cache.delete(key); // Remove OTP after checking
-            return true;
-        }
-        this.cache.delete(key);
-        return false;
-    }
-
-    delete(key: string) {
-        this.cache.delete(key);
-    }
-
-    clear() {
-        this.cache.clear();
-    }
-
-    cleanup() {
-        const now = Date.now();
-        for (const [key, expireAt] of this.cache) {
-            if (now >= expireAt) {
-                this.cache.delete(key);
-            }
-        }
-    }
-}
 
 interface CacheEntry {
     value: any;
@@ -106,7 +68,6 @@ class TTLCache {
 }
 
 const cache = {
-    otp: new OtpCache(),
     users: new TTLCache(5), // key : userId, value : user
     stores: new TTLCache(10), // key : storeId, value : store
     products: new TTLCache(1), // key : productId, value : product
