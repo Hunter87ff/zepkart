@@ -1,5 +1,6 @@
 export enum PermissionLevels {
-    Admin = 777,
-    Manager = 555,
-    User = 333,
+    admin = 777,
+    manager = 555,
+    store_owner = 444,
+    user = 333,
 }

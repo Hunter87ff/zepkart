@@ -7,12 +7,14 @@ class Permissions {
     public admin: boolean;
     public manager: boolean;
     public user: boolean;
+    public store_owner: boolean;
     public perms: number[];
 
     constructor(permissions: number[]) {
         this.perms = permissions;
-        this.admin = permissions.includes(PermissionLevels.Admin);
-        this.manager = permissions.includes(PermissionLevels.Manager) || this.admin;
+        this.admin = permissions.includes(PermissionLevels.admin);
+        this.manager = permissions.includes(PermissionLevels.manager) || this.admin;
+        this.store_owner = permissions.includes(PermissionLevels.store_owner) || this.manager;
         this.user = true; // All users have basic user permissions
     }
 
@@ -21,7 +23,8 @@ class Permissions {
             admin: this.admin,
             manager: this.manager,
             user: this.user,
-            perms: this.perms,
+            store_owner: this.store_owner,
+            // perms: this.perms,
         };
     }
 }
@@ -45,7 +48,7 @@ export class Token {
         this.id = object.id || null;
         this.name = object.name || 'Guest';
         this.expireAt = config.jwtExpiration;
-        this.permissions = new Permissions(object.permissions || [PermissionLevels.User]);
+        this.permissions = new Permissions(object.permissions || [PermissionLevels.user]);
         object.jwt && (this.jwt = object.jwt);
     }
 
@@ -54,7 +57,7 @@ export class Token {
             const decoded = verify(token, config.jwtSecret) as JwtPayload;
             const _id = decoded._id || null;
             const name = String(decoded.name || 'Guest');
-            const permissions = decoded.permissions || [PermissionLevels.User];
+            const permissions = decoded.permissions || [PermissionLevels.user];
             const expireAt = decoded.expireAt || config.jwtExpiration;
 
             return new Token({
