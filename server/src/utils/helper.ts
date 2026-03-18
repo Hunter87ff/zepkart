@@ -1,5 +1,5 @@
-import bcrypt from "bcrypt";
-import { Token } from "./wrappers/token";
+import bcrypt from "bcryptjs";
+import { Token } from "./token";
 
 
 export default class Helper {
