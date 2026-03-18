@@ -1,6 +1,7 @@
 import path from "path";
 import e from "express";
 import security from "./security";
+import router from "@routes";
 import { logger } from "@/ext/logger";
 import cookieParser from "cookie-parser";
 import Helper from "@/utils/helper";
@@ -59,4 +60,5 @@ export default function middlewares(app: e.Application) {
     init(app);
     security(app);
     app.use(requests);
+    app.use("/", router);
 }
