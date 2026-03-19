@@ -1,19 +1,41 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react';
 import loginBg from '../assets/login-bg.png';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginPage() {
+  const { login, register } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/';
+
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(isLogin ? 'Login:' : 'Signup:', { email, password, name, phone });
+    setIsLoading(true);
+    setError('');
+
+    try {
+      if (isLogin) {
+        await login({ email, password });
+      } else {
+        await register({ name, email, phone, password });
+      }
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -117,6 +139,13 @@ export default function LoginPage() {
             </p>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm text-center">
+              {error}
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
@@ -212,9 +241,10 @@ export default function LoginPage() {
             <button
               id="auth-submit"
               type="submit"
-              className="w-full py-3.5 bg-yellow hover:bg-yellow-dark text-gray-900 font-bold text-base rounded-xl transition-all duration-250 hover:shadow-lg hover:-translate-y-0.5"
+              disabled={isLoading}
+              className="w-full py-3.5 bg-yellow hover:bg-yellow-dark text-gray-900 font-bold text-base rounded-xl transition-all duration-250 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:translate-y-0 disabled:shadow-none"
             >
-              {isLogin ? 'Log In' : 'Sign Up'}
+              {isLoading ? 'Processing...' : (isLogin ? 'Log In' : 'Sign Up')}
             </button>
           </form>
 

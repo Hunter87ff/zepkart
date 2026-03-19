@@ -1,13 +1,13 @@
 import { Router } from "express";
 import CartController from "@controllers/cart";
+import auth from "@/middleware/auth";
 
 const cartRouter = Router();
 
-
-cartRouter.get("/", CartController.getCart);
-cartRouter.post("/add", CartController.addToCart);
-cartRouter.post("/remove", CartController.removeFromCart);
-cartRouter.post("/update", CartController.updateCart);
-cartRouter.post("/clear", CartController.clearCart);
+cartRouter.get("/", auth, CartController.getCart);
+cartRouter.post("/add", auth, CartController.addToCart);
+cartRouter.post("/remove", auth, CartController.removeFromCart);
+cartRouter.post("/update", auth, CartController.updateCart);
+cartRouter.post("/clear", auth, CartController.clearCart);
 
 export default cartRouter;

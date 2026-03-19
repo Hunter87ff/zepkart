@@ -13,7 +13,7 @@ import { ArrowLeft, Pencil, Save, Trash2 } from 'lucide-react';
 export default function StoreProductDetail() {
 	const { id } = useParams();
 	const navigate = useNavigate();
-	const productId = Number(id);
+	const productId = id as string;
 
 	const [product, setProduct] = useState<StoreProduct | null>(null);
 	const [price, setPrice] = useState('');
@@ -26,21 +26,26 @@ export default function StoreProductDetail() {
 
 	useEffect(() => {
 		async function loadProduct() {
-			if (!Number.isFinite(productId)) {
+			if (!productId) {
 				setLoading(false);
 				return;
 			}
 
-			const data = await getStoreProductById(productId);
-			if (data) {
-				setProduct(data);
-				setPrice(String(data.price));
-				setMrp(String(data.mrp));
-				setStock(String(data.stock));
-				setStatus(data.status);
-				setDescription(data.description);
-			}
-			setLoading(false);
+			try {
+                const data = await getStoreProductById(productId);
+                if (data) {
+                    setProduct(data);
+                    setPrice(String(data.price));
+                    setMrp(String(data.mrp || data.price));
+                    setStock(String(data.stock));
+                    setStatus(data.status || 'draft');
+                    setDescription(data.description);
+                }
+            } catch (error) {
+                console.error('Failed to load product:', error);
+            } finally {
+                setLoading(false);
+            }
 		}
 
 		loadProduct();
@@ -52,15 +57,20 @@ export default function StoreProductDetail() {
 			return;
 		}
 
-		const updated = await updateStoreProduct(product.id, {
-			price: Number(price),
-			mrp: Number(mrp),
-			stock: Number(stock),
-			status,
-			description,
-		});
-		setProduct(updated);
-		setMessage('Product information updated.');
+		try {
+            const updated = await updateStoreProduct(product._id || product.id!, {
+                price: Number(price),
+                mrp: Number(mrp),
+                stock: Number(stock),
+                status,
+                description,
+            });
+            setProduct(updated);
+            setMessage('Product information updated.');
+        } catch (error) {
+            console.error('Failed to update product:', error);
+            setMessage('Failed to update product.');
+        }
 	}
 
 	async function handleDelete() {
@@ -73,8 +83,13 @@ export default function StoreProductDetail() {
 			return;
 		}
 
-		await deleteStoreProduct(product.id);
-		navigate('/store/products');
+		try {
+            await deleteStoreProduct(product._id || product.id!);
+            navigate('/store/products');
+        } catch (error) {
+            console.error('Failed to delete product:', error);
+            alert('Failed to delete product.');
+        }
 	}
 
 	if (loading) {
@@ -114,7 +129,7 @@ export default function StoreProductDetail() {
 								<ArrowLeft size={15} /> Back to products
 							</Link>
 							<h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
-							<p className="text-sm text-gray-500 mt-1">SKU: {product.sku} · {product.category}</p>
+							<p className="text-sm text-gray-500 mt-1">SKU: {product.sku || 'N/A'} · {(product.categories || []).join(', ')}</p>
 						</div>
 						<button
 							type="button"
@@ -134,25 +149,29 @@ export default function StoreProductDetail() {
 
 				<section className="grid lg:grid-cols-[1fr_1.1fr] gap-6">
 					<article className="bg-white border border-gray-100 rounded-2xl p-5 lg:p-6 shadow-card">
-						<img src={product.image} alt={product.name} className="w-full max-h-[340px] object-contain bg-gray-50 border border-gray-100 rounded-xl p-6" />
+						<img 
+                            src={product.image || (product.images?.[0] || '')} 
+                            alt={product.name} 
+                            className="w-full max-h-[340px] object-contain bg-gray-50 border border-gray-100 rounded-xl p-6" 
+                        />
 
 						<div className="mt-5 space-y-3 text-sm text-gray-600">
 							<p>
 								<span className="text-gray-400">Created:</span>{' '}
-								{new Date(product.createdAt).toLocaleString()}
+								{new Date(product.createdAt || '').toLocaleString()}
 							</p>
 							<p>
 								<span className="text-gray-400">Last Updated:</span>{' '}
-								{new Date(product.updatedAt).toLocaleString()}
+								{new Date(product.updatedAt || '').toLocaleString()}
 							</p>
 							<p>
 								<span className="text-gray-400">Units Sold:</span>{' '}
-								<strong className="text-gray-800">{product.sales}</strong>
+								<strong className="text-gray-800">{product.sales || 0}</strong>
 							</p>
 							<div>
 								<p className="text-gray-400 mb-1">Tags:</p>
 								<div className="flex flex-wrap gap-2">
-									{product.tags.length === 0 ? (
+									{!product.tags || product.tags.length === 0 ? (
 										<span className="text-xs text-gray-500">No tags</span>
 									) : (
 										product.tags.map((tag) => (

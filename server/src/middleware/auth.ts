@@ -17,7 +17,12 @@ export function initUser(req: Request){
     }
 
     if (token) {
-        req.user = Token.fromToken(token);
+        try {
+            req.user = Token.fromToken(token);
+        } catch (error) {
+            // If token is invalid, just don't set user
+            // The auth middleware will handle the unauthorized case
+        }
     }
 }
 

@@ -41,13 +41,13 @@ const storeSchema = new Schema({
     },
     logo: {
         type: String,
-        required: [true, "Logo URL is required"],
-        match: [/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/, "Please provide a valid image URL"]
+        required: [false, "Logo URL is required"],
+        // match: [/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/, "Please provide a valid image URL"]
     },
     banner: {
         type: String,
-        required: [true, "Banner URL is required"],
-        match: [/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/, "Please provide a valid image URL"]
+        required: [false, "Banner URL is required"],
+        // match: [/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/, "Please provide a valid image URL"]
     },
     contact_email: {
         type: String,

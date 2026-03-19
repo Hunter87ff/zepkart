@@ -1,464 +1,336 @@
-import backpackImg from '../assets/backpack.png';
-import headphonesImg from '../assets/headphones.png';
-import shoesImg from '../assets/shoes.png';
-import smartwatchImg from '../assets/smartwatch.png';
-import watchImg from '../assets/watch.png';
+import apiClient from './api-client';
+import type {
+	ApiResponse,
+	PaginatedResponse,
+	User,
+	Store,
+	Product,
+	Cart,
+	CartItem,
+	Order,
+	Wishlist,
+	ProductStatus,
+	OrderStatus,
+	DashboardSummary,
+	StoreProfile,
+} from '../types/api';
 
-export type ProductStatus = 'active' | 'draft' | 'out-of-stock';
-export type OrderStatus =
-	| 'pending'
-	| 'confirmed'
-	| 'packed'
-	| 'shipped'
-	| 'delivered'
-	| 'cancelled';
+// --- Types & Aliases for Compatibility ---
+export type { ProductStatus, OrderStatus, Order };
+export type StoreProduct = Product;
+export type StoreOrder = Order;
+// export type { StoreProfile } from '../types/api'; // If we add it later
+export type { DashboardSummary, StoreProfile };
 
-export interface StoreProfile {
-	id: string;
-	name: string;
-	email: string;
-	phone: string;
-	address: string;
-	description: string;
-	returnPolicy: string;
-	shippingPolicy: string;
+// --- Mappers for compatibility (_id -> id, images -> image) ---
+
+function mapUser(user: any): User {
+	if (!user) return user;
+	return { ...user, id: user._id || user.id };
 }
 
-export interface StoreProduct {
-	id: number;
-	name: string;
-	sku: string;
-	category: string;
-	price: number;
-	mrp: number;
-	stock: number;
-	status: ProductStatus;
-	image: string;
-	description: string;
-	tags: string[];
-	sales: number;
-	createdAt: string;
-	updatedAt: string;
+function mapStore(store: any): Store {
+	if (!store) return store;
+	return { ...store, id: store._id || store.id };
 }
 
-export interface OrderItem {
-	productId: number;
-	productName: string;
-	image: string;
-	quantity: number;
-	price: number;
+function mapProduct(product: any): Product {
+	if (!product) return product;
+	return {
+		...product,
+		id: product._id || product.id,
+		image: product.images?.[0] || product.image || '',
+	};
 }
 
-export interface StoreOrder {
-	id: string;
-	customerName: string;
-	customerEmail: string;
-	customerPhone: string;
-	shippingAddress: string;
-	paymentMethod: 'COD' | 'UPI' | 'Card';
-	paymentStatus: 'paid' | 'pending' | 'refunded';
-	status: OrderStatus;
-	notes: string;
-	shippingCharge: number;
-	total: number;
-	items: OrderItem[];
-	createdAt: string;
-	updatedAt: string;
+function mapOrder(order: any): Order {
+	if (!order) return order;
+	return { ...order, id: order._id || order.id };
 }
 
-interface StoreDb {
-	profile: StoreProfile;
-	products: StoreProduct[];
-	orders: StoreOrder[];
+function mapCartItem(item: any): CartItem {
+	if (!item) return item;
+	return {
+		...item,
+		id: item._id || item.id,
+		product: mapProduct(item.product),
+	};
 }
 
-export interface DashboardSummary {
-	totalProducts: number;
-	activeProducts: number;
-	lowStockProducts: number;
-	totalOrders: number;
-	pendingOrders: number;
-	shippedOrders: number;
-	deliveredOrders: number;
-	totalRevenue: number;
+// --- Auth & User ---
+
+export async function login(credentials: any): Promise<{ token: string; user: User }> {
+	const res = await apiClient.post<ApiResponse<{ token: string; user: User }>>('/auth/login', credentials);
+	localStorage.setItem('zepkart_token', res.data.data.token);
+	return {
+		token: res.data.data.token,
+		user: mapUser(res.data.data.user),
+	};
 }
 
-const STORAGE_KEY = 'zepkart-store-db-v1';
-
-const seedDb: StoreDb = {
-	profile: {
-		id: 'store-1',
-		name: 'Nova Retail Hub',
-		email: 'support@novaretailhub.com',
-		phone: '+91 98765 43120',
-		address: '2nd Floor, MG Road, Bengaluru, Karnataka 560001',
-		description:
-			'Nova Retail Hub delivers quality lifestyle and electronics products with fast shipping and dependable support.',
-		returnPolicy:
-			'Returns accepted within 7 days for unused items with original packaging.',
-		shippingPolicy:
-			'Orders ship in 24 hours. Metro delivery in 2-4 days and non-metro in 4-7 days.',
-	},
-	products: [
-		{
-			id: 301,
-			name: 'Premium Wireless Headphones',
-			sku: 'NOVA-HP-301',
-			category: 'Electronics',
-			price: 299,
-			mrp: 399,
-			stock: 27,
-			status: 'active',
-			image: headphonesImg,
-			description:
-				'Over-ear wireless headphones with rich bass and active noise cancellation.',
-			tags: ['wireless', 'audio', 'noise-cancelling'],
-			sales: 187,
-			createdAt: '2026-01-05T10:00:00.000Z',
-			updatedAt: '2026-03-12T08:30:00.000Z',
-		},
-		{
-			id: 302,
-			name: 'Urban Running Shoes',
-			sku: 'NOVA-SH-302',
-			category: 'Footwear',
-			price: 85,
-			mrp: 120,
-			stock: 8,
-			status: 'active',
-			image: shoesImg,
-			description:
-				'Lightweight running shoes with breathable mesh and anti-slip grip.',
-			tags: ['running', 'sports', 'men'],
-			sales: 142,
-			createdAt: '2026-01-18T10:00:00.000Z',
-			updatedAt: '2026-03-14T13:20:00.000Z',
-		},
-		{
-			id: 303,
-			name: 'Smart Fitness Watch',
-			sku: 'NOVA-WT-303',
-			category: 'Wearables',
-			price: 199,
-			mrp: 250,
-			stock: 0,
-			status: 'out-of-stock',
-			image: smartwatchImg,
-			description:
-				'Track steps, sleep, heart rate, and workouts with all-day battery life.',
-			tags: ['fitness', 'smartwatch', 'health'],
-			sales: 94,
-			createdAt: '2026-02-03T10:00:00.000Z',
-			updatedAt: '2026-03-10T09:00:00.000Z',
-		},
-		{
-			id: 304,
-			name: 'Waterproof Travel Backpack',
-			sku: 'NOVA-BP-304',
-			category: 'Bags',
-			price: 45,
-			mrp: 60,
-			stock: 16,
-			status: 'draft',
-			image: backpackImg,
-			description:
-				'20L everyday travel backpack with water-resistant shell and padded straps.',
-			tags: ['travel', 'backpack', 'waterproof'],
-			sales: 0,
-			createdAt: '2026-03-01T10:00:00.000Z',
-			updatedAt: '2026-03-01T10:00:00.000Z',
-		},
-	],
-	orders: [
-		{
-			id: 'ZPK-STORE-9001',
-			customerName: 'Aarav Sharma',
-			customerEmail: 'aarav.sharma@example.com',
-			customerPhone: '+91 98980 12345',
-			shippingAddress: 'No. 14, Indiranagar, Bengaluru 560038',
-			paymentMethod: 'UPI',
-			paymentStatus: 'paid',
-			status: 'confirmed',
-			notes: 'Gift wrap requested.',
-			shippingCharge: 0,
-			total: 299,
-			items: [
-				{
-					productId: 301,
-					productName: 'Premium Wireless Headphones',
-					image: headphonesImg,
-					quantity: 1,
-					price: 299,
-				},
-			],
-			createdAt: '2026-03-16T09:14:00.000Z',
-			updatedAt: '2026-03-16T10:00:00.000Z',
-		},
-		{
-			id: 'ZPK-STORE-9002',
-			customerName: 'Mira Das',
-			customerEmail: 'mira.das@example.com',
-			customerPhone: '+91 91234 88811',
-			shippingAddress: 'Flat 6B, Salt Lake, Kolkata 700091',
-			paymentMethod: 'COD',
-			paymentStatus: 'pending',
-			status: 'packed',
-			notes: '',
-			shippingCharge: 49,
-			total: 219,
-			items: [
-				{
-					productId: 302,
-					productName: 'Urban Running Shoes',
-					image: shoesImg,
-					quantity: 2,
-					price: 85,
-				},
-			],
-			createdAt: '2026-03-15T13:30:00.000Z',
-			updatedAt: '2026-03-16T12:20:00.000Z',
-		},
-		{
-			id: 'ZPK-STORE-9003',
-			customerName: 'Ritika Mehra',
-			customerEmail: 'ritika.m@example.com',
-			customerPhone: '+91 90450 11120',
-			shippingAddress: 'DLF Phase 3, Gurugram 122002',
-			paymentMethod: 'Card',
-			paymentStatus: 'paid',
-			status: 'shipped',
-			notes: 'Deliver after 6 PM.',
-			shippingCharge: 0,
-			total: 244,
-			items: [
-				{
-					productId: 304,
-					productName: 'Waterproof Travel Backpack',
-					image: backpackImg,
-					quantity: 1,
-					price: 45,
-				},
-				{
-					productId: 303,
-					productName: 'Smart Fitness Watch',
-					image: smartwatchImg,
-					quantity: 1,
-					price: 199,
-				},
-			],
-			createdAt: '2026-03-14T11:20:00.000Z',
-			updatedAt: '2026-03-17T09:40:00.000Z',
-		},
-		{
-			id: 'ZPK-STORE-9004',
-			customerName: 'Nikhil Verma',
-			customerEmail: 'nikhil.v@example.com',
-			customerPhone: '+91 98117 33300',
-			shippingAddress: 'Kondapur, Hyderabad 500084',
-			paymentMethod: 'UPI',
-			paymentStatus: 'paid',
-			status: 'delivered',
-			notes: '',
-			shippingCharge: 0,
-			total: 120,
-			items: [
-				{
-					productId: 304,
-					productName: 'Waterproof Travel Backpack',
-					image: backpackImg,
-					quantity: 1,
-					price: 45,
-				},
-				{
-					productId: 302,
-					productName: 'Urban Running Shoes',
-					image: shoesImg,
-					quantity: 1,
-					price: 85,
-				},
-			],
-			createdAt: '2026-03-10T16:15:00.000Z',
-			updatedAt: '2026-03-13T12:11:00.000Z',
-		},
-		{
-			id: 'ZPK-STORE-9005',
-			customerName: 'Pooja Jain',
-			customerEmail: 'pooja.j@example.com',
-			customerPhone: '+91 99555 21212',
-			shippingAddress: 'Civil Lines, Jaipur 302006',
-			paymentMethod: 'Card',
-			paymentStatus: 'refunded',
-			status: 'cancelled',
-			notes: 'Customer requested cancellation before dispatch.',
-			shippingCharge: 0,
-			total: 120,
-			items: [
-				{
-					productId: 305,
-					productName: 'Classic Wrist Watch',
-					image: watchImg,
-					quantity: 1,
-					price: 120,
-				},
-			],
-			createdAt: '2026-03-09T15:00:00.000Z',
-			updatedAt: '2026-03-09T15:45:00.000Z',
-		},
-	],
-};
-
-function clone<T>(data: T): T {
-	return JSON.parse(JSON.stringify(data)) as T;
+export async function register(userData: any): Promise<{ token: string; user: User }> {
+	const res = await apiClient.post<ApiResponse<{ token: string; user: User }>>('/auth/register', userData);
+	localStorage.setItem('zepkart_token', res.data.data.token);
+	return {
+		token: res.data.data.token,
+		user: mapUser(res.data.data.user),
+	};
 }
 
-function readDb(): StoreDb {
-	const raw = localStorage.getItem(STORAGE_KEY);
-	if (!raw) {
-		const seeded = clone(seedDb);
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-		return seeded;
-	}
-
-	try {
-		return JSON.parse(raw) as StoreDb;
-	} catch {
-		const seeded = clone(seedDb);
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-		return seeded;
-	}
+export async function logout(): Promise<void> {
+	await apiClient.post('/auth/logout');
+	localStorage.removeItem('zepkart_token');
 }
 
-function writeDb(db: StoreDb) {
-	localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+export async function getMyProfile(): Promise<User> {
+	const res = await apiClient.get<ApiResponse<User>>('/users/');
+	return mapUser(res.data.data);
 }
 
-function delay<T>(data: T, ms = 220): Promise<T> {
-	return new Promise((resolve) => {
-		window.setTimeout(() => resolve(clone(data)), ms);
-	});
+// --- Store ---
+
+export async function getStores(params?: any): Promise<Store[]> {
+	const res = await apiClient.get<PaginatedResponse<Store>>('/stores/', { params });
+	return (res.data.data.stores || []).map(mapStore);
 }
 
+export async function getStoreById(id: string): Promise<Store> {
+	const res = await apiClient.get<ApiResponse<Store>>(`/stores/${id}`);
+	return mapStore(res.data.data);
+}
+
+// Compatibility with Store Manager
 export async function getStoreProfile(): Promise<StoreProfile> {
-	return delay(readDb().profile);
+    // In our backend, a user can own a store. 
+    // We'll fetch stores owned by the user or just the first one for simplicity in this MVP.
+    const stores = await getStores({ owner: 'me' }); // backend implementation should handle this
+    const store = stores[0];
+    if (!store) return {} as StoreProfile;
+
+    return {
+        _id: store._id,
+        id: store.id,
+        name: store.name,
+        email: store.contact_email || '',
+        phone: store.contact_phone || '',
+        address: '', // Mapped to empty as backend lacks this field
+        description: store.description || '',
+        returnPolicy: store.policies?.return || '',
+        shippingPolicy: store.policies?.shipping || '',
+    };
 }
 
-export async function updateStoreProfile(
-	payload: Partial<StoreProfile>
-): Promise<StoreProfile> {
-	const db = readDb();
-	db.profile = { ...db.profile, ...payload };
-	writeDb(db);
-	return delay(db.profile);
+export async function updateStoreProfile(payload: StoreProfile): Promise<StoreProfile> {
+    const profile = await getStoreProfile();
+    const id = profile._id || profile.id;
+    if (!id) throw new Error('Store not found');
+
+    const mappedPayload = {
+        name: payload.name,
+        description: payload.description,
+        contact_email: payload.email,
+        contact_phone: payload.phone,
+        policies: {
+            return: payload.returnPolicy,
+            shipping: payload.shippingPolicy,
+        }
+    };
+
+    const updated = await updateStore(id, mappedPayload);
+    // Map back to StoreProfile
+    return {
+        ...payload,
+        _id: updated._id,
+        id: updated.id,
+    };
 }
 
-export async function getStoreProducts(): Promise<StoreProduct[]> {
-	return delay(readDb().products);
+export async function createStore(data: any): Promise<Store> {
+	const res = await apiClient.post<ApiResponse<Store>>('/stores/', data);
+	return mapStore(res.data.data);
 }
 
-export async function getStoreProductById(
-	id: number
-): Promise<StoreProduct | null> {
-	const product = readDb().products.find((item) => item.id === id) ?? null;
-	return delay(product);
+export async function updateStore(id: string | number, data: any): Promise<Store> {
+	const res = await apiClient.post<ApiResponse<Store>>(`/stores/${id}`, data);
+	return mapStore(res.data.data);
 }
 
-export async function createStoreProduct(
-	payload: Omit<StoreProduct, 'id' | 'createdAt' | 'updatedAt' | 'sales'>
-): Promise<StoreProduct> {
-	const db = readDb();
-	const maxId = db.products.reduce((max, item) => Math.max(max, item.id), 300);
-	const now = new Date().toISOString();
-	const product: StoreProduct = {
-		...payload,
-		id: maxId + 1,
-		sales: 0,
-		createdAt: now,
-		updatedAt: now,
+export async function deleteStore(id: string | number): Promise<void> {
+	await apiClient.delete(`/stores/${id}`);
+}
+
+// --- Products ---
+
+export async function getProducts(params?: any): Promise<Product[]> {
+	const res = await apiClient.get<PaginatedResponse<Product>>('/products/', { params });
+	return (res.data.data.products || []).map(mapProduct);
+}
+
+export async function getProductById(id: string | number): Promise<Product> {
+	const res = await apiClient.get<ApiResponse<Product>>(`/products/${id}`);
+	return mapProduct(res.data.data);
+}
+
+// Compatibility with Store Manager
+export async function getStoreProducts(): Promise<Product[]> {
+    return getProducts({ owner: 'me' });
+}
+
+export async function getStoreProductById(id: string | number): Promise<Product | null> {
+    return getProductById(id);
+}
+
+export async function createStoreProduct(data: any): Promise<Product> {
+    return createProduct(data);
+}
+
+export async function updateStoreProduct(id: string | number, data: any): Promise<Product> {
+    return updateProduct(id, data);
+}
+
+export async function deleteStoreProduct(id: string | number): Promise<void> {
+    return deleteProduct(id);
+}
+
+export async function createProduct(data: any): Promise<Product> {
+	const res = await apiClient.post<ApiResponse<Product>>('/products/', data);
+	return mapProduct(res.data.data);
+}
+
+export async function updateProduct(id: string | number, data: any): Promise<Product> {
+	const res = await apiClient.put<ApiResponse<Product>>(`/products/${id}`, data);
+	return mapProduct(res.data.data);
+}
+
+export async function deleteProduct(id: string | number): Promise<void> {
+	await apiClient.delete(`/products/${id}`);
+}
+
+// --- Cart ---
+
+export async function getCart(): Promise<{ cart: Cart; items: CartItem[]; subtotal: number }> {
+	const res = await apiClient.get<ApiResponse<{ cart: Cart; items: CartItem[]; subtotal: number }>>('/cart/');
+	return {
+		cart: mapCartItem(res.data.data.cart) as any,
+		items: (res.data.data.items || []).map(mapCartItem),
+		subtotal: res.data.data.subtotal,
 	};
-
-	db.products.unshift(product);
-	writeDb(db);
-	return delay(product);
 }
 
-export async function updateStoreProduct(
-	id: number,
-	payload: Partial<StoreProduct>
-): Promise<StoreProduct> {
-	const db = readDb();
-	const index = db.products.findIndex((item) => item.id === id);
-	if (index < 0) {
-		throw new Error('Product not found');
-	}
+export async function addToCart(productId: string, quantity: number): Promise<CartItem> {
+	const res = await apiClient.post<ApiResponse<CartItem>>('/cart/add', { productId, quantity });
+	return mapCartItem(res.data.data);
+}
 
-	db.products[index] = {
-		...db.products[index],
-		...payload,
-		id,
-		updatedAt: new Date().toISOString(),
+export async function removeFromCart(productId: string): Promise<void> {
+	await apiClient.post('/cart/remove', { productId });
+}
+
+export async function updateCartItem(productId: string, quantity: number): Promise<CartItem> {
+	const res = await apiClient.post('/cart/update', { productId, quantity });
+	return mapCartItem(res.data.data);
+}
+
+export async function clearCart(): Promise<void> {
+	await apiClient.post('/cart/clear');
+}
+
+// --- Orders ---
+
+export async function getOrders(params?: any): Promise<Order[]> {
+	const res = await apiClient.get<PaginatedResponse<Order>>('/orders/', { params });
+	return (res.data.data.orders || []).map(mapOrder);
+}
+
+// Compatibility with Store Manager
+export async function getStoreOrders(): Promise<Order[]> {
+    return getOrders();
+}
+
+export async function getStoreOrderById(id: string): Promise<Order | null> {
+    const res = await getOrderById(id);
+    return res.order;
+}
+
+export async function updateStoreOrder(id: string, payload: any): Promise<Order> {
+    const res = await apiClient.put<ApiResponse<Order>>(`/orders/${id}`, payload);
+    return mapOrder(res.data.data);
+}
+
+export async function getOrderById(id: string): Promise<{ order: Order; items: any[] }> {
+	const res = await apiClient.get<ApiResponse<{ order: Order; items: any[] }>>(`/orders/${id}`);
+	return {
+		order: mapOrder(res.data.data.order),
+		items: (res.data.data.items || []).map((item: any) => ({
+			...item,
+			product: mapProduct(item.product),
+		})),
 	};
-
-	writeDb(db);
-	return delay(db.products[index]);
 }
 
-export async function deleteStoreProduct(id: number): Promise<void> {
-	const db = readDb();
-	db.products = db.products.filter((item) => item.id !== id);
-	writeDb(db);
-	return delay(undefined);
+export async function createOrder(): Promise<Order> {
+	const res = await apiClient.post<ApiResponse<Order>>('/orders/');
+	return mapOrder(res.data.data);
 }
 
-export async function getStoreOrders(): Promise<StoreOrder[]> {
-	return delay(readDb().orders);
-}
+// --- Wishlist ---
 
-export async function getStoreOrderById(id: string): Promise<StoreOrder | null> {
-	const order = readDb().orders.find((item) => item.id === id) ?? null;
-	return delay(order);
-}
-
-export async function updateStoreOrder(
-	id: string,
-	payload: Partial<StoreOrder>
-): Promise<StoreOrder> {
-	const db = readDb();
-	const index = db.orders.findIndex((item) => item.id === id);
-	if (index < 0) {
-		throw new Error('Order not found');
-	}
-
-	db.orders[index] = {
-		...db.orders[index],
-		...payload,
-		id,
-		updatedAt: new Date().toISOString(),
+export async function getWishlist(): Promise<Wishlist> {
+	const res = await apiClient.get<ApiResponse<Wishlist>>('/wishlist/');
+	return {
+		...res.data.data,
+		id: res.data.data._id,
+		products: (res.data.data.products || []).map(mapProduct),
 	};
-
-	writeDb(db);
-	return delay(db.orders[index]);
 }
+
+export async function addToWishlist(productId: string): Promise<Wishlist> {
+	const res = await apiClient.post<ApiResponse<Wishlist>>(`/wishlist/products/${productId}`);
+	return {
+		...res.data.data,
+		id: res.data.data._id,
+		products: (res.data.data.products || []).map(mapProduct),
+	};
+}
+
+export async function removeFromWishlist(productId: string): Promise<Wishlist> {
+	const res = await apiClient.delete<ApiResponse<Wishlist>>(`/wishlist/products/${productId}`);
+	return {
+		...res.data.data,
+		id: res.data.data._id,
+		products: (res.data.data.products || []).map(mapProduct),
+	};
+}
+
+// --- Dashboard / Legacy Adapters ---
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
-	const db = readDb();
-	const lowStock = db.products.filter((item) => item.stock > 0 && item.stock <= 10);
-	const active = db.products.filter((item) => item.status === 'active');
-	const pending = db.orders.filter((item) => item.status === 'pending');
-	const shipped = db.orders.filter((item) => item.status === 'shipped');
-	const delivered = db.orders.filter((item) => item.status === 'delivered');
-	const revenue = db.orders
-		.filter((item) => item.paymentStatus === 'paid')
-		.reduce((sum, item) => sum + item.total, 0);
+	try {
+		const [productsRes, ordersRes] = await Promise.all([
+			apiClient.get<PaginatedResponse<Product>>('/products/', { params: { limit: 1 } }),
+			apiClient.get<PaginatedResponse<Order>>('/orders/', { params: { limit: 1 } }),
+		]);
 
-	return delay({
-		totalProducts: db.products.length,
-		activeProducts: active.length,
-		lowStockProducts: lowStock.length,
-		totalOrders: db.orders.length,
-		pendingOrders: pending.length,
-		shippedOrders: shipped.length,
-		deliveredOrders: delivered.length,
-		totalRevenue: revenue,
-	});
+		return {
+			totalProducts: productsRes.data.data.pagination.total,
+			activeProducts: productsRes.data.data.pagination.total, // Approximation
+			lowStockProducts: 0,
+			totalOrders: ordersRes.data.data.pagination.total,
+			pendingOrders: 0,
+			shippedOrders: 0,
+			deliveredOrders: 0,
+			totalRevenue: 0,
+		};
+	} catch {
+		return {
+			totalProducts: 0,
+			activeProducts: 0,
+			lowStockProducts: 0,
+			totalOrders: 0,
+			pendingOrders: 0,
+			shippedOrders: 0,
+			deliveredOrders: 0,
+			totalRevenue: 0,
+		} as any;
+	}
 }
-

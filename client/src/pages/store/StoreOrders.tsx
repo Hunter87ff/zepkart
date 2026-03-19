@@ -55,17 +55,18 @@ export default function StoreOrders() {
 		const q = search.toLowerCase().trim();
 		return orders.filter((order) => {
 			const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+            const customerName = typeof order.user === 'object' ? order.user.name : 'Customer';
 			const matchesSearch =
 				!q ||
-				order.id.toLowerCase().includes(q) ||
-				order.customerName.toLowerCase().includes(q) ||
-				order.customerPhone.toLowerCase().includes(q);
+				(order.id && order.id.toLowerCase().includes(q)) ||
+                (order._id && order._id.toLowerCase().includes(q)) ||
+				customerName.toLowerCase().includes(q);
 			return matchesStatus && matchesSearch;
 		});
 	}, [orders, search, statusFilter]);
 
 	async function changeStatus(order: StoreOrder, newStatus: OrderStatus) {
-		await updateStoreOrder(order.id, { status: newStatus });
+		await updateStoreOrder(order._id || order.id!, { status: newStatus });
 		await loadOrders();
 	}
 
@@ -137,18 +138,22 @@ export default function StoreOrders() {
 									</tr>
 								</thead>
 								<tbody>
-									{filteredOrders.map((order) => (
-										<tr key={order.id} className="border-t border-gray-100">
+									{filteredOrders.map((order) => {
+                                        const customerName = (order.user && typeof order.user === 'object') ? order.user.name : 'Customer';
+                                        const customerEmail = (order.user && typeof order.user === 'object') ? order.user.email : '';
+                                        
+                                        return (
+										<tr key={order._id || order.id} className="border-t border-gray-100">
 											<td className="px-4 py-3 min-w-40">
-												<p className="font-semibold text-gray-900">{order.id}</p>
+												<p className="font-semibold text-gray-900 text-xs font-mono lowercase">#{ (order._id || order.id!).slice(-8) }</p>
 												<p className="text-xs text-gray-500 mt-1">{new Date(order.createdAt).toLocaleString()}</p>
 											</td>
 											<td className="px-4 py-3 min-w-48">
-												<p className="font-medium text-gray-900">{order.customerName}</p>
-												<p className="text-xs text-gray-500 mt-1">{order.customerPhone}</p>
+												<p className="font-medium text-gray-900">{customerName}</p>
+												<p className="text-xs text-gray-500 mt-1">{customerEmail}</p>
 											</td>
-											<td className="px-4 py-3 text-gray-600">{order.items.length}</td>
-											<td className="px-4 py-3 text-gray-800 font-semibold">₹{order.total.toFixed(2)}</td>
+											<td className="px-4 py-3 text-gray-600">{order.items?.length || 0}</td>
+											<td className="px-4 py-3 text-gray-800 font-semibold">₹{order.total_amount.toFixed(0)}</td>
 											<td className="px-4 py-3">
 												<span className={`inline-flex px-2.5 py-1 rounded-full border text-xs font-semibold ${statusBadge(order.status)}`}>
 													{order.status}
@@ -171,14 +176,14 @@ export default function StoreOrders() {
 											</td>
 											<td className="px-4 py-3 text-right">
 												<Link
-													to={`/store/orders/${order.id}`}
+													to={`/store/orders/${order._id || order.id}`}
 													className="inline-flex items-center px-3 py-1.5 rounded-md border border-gray-200 text-xs font-semibold text-gray-600 hover:text-primary hover:border-primary/30"
 												>
 													View
 												</Link>
 											</td>
 										</tr>
-									))}
+									)})}
 								</tbody>
 							</table>
 						</div>

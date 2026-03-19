@@ -12,7 +12,7 @@ import {
 import { Plus, Search, Pencil, Trash2, Eye } from 'lucide-react';
 
 type ProductFormState = {
-	id?: number;
+	id?: string | number;
 	name: string;
 	sku: string;
 	category: string;
@@ -49,9 +49,14 @@ export default function StoreProducts() {
 	const [form, setForm] = useState<ProductFormState>(emptyForm);
 
 	async function loadProducts() {
-		const data = await getStoreProducts();
-		setProducts(data);
-		setLoading(false);
+		try {
+			const data = await getStoreProducts();
+			setProducts(data);
+		} catch (error) {
+			console.error('Failed to load products:', error);
+		} finally {
+			setLoading(false);
+		}
 	}
 
 	useEffect(() => {
@@ -65,8 +70,8 @@ export default function StoreProducts() {
 			const matchesSearch =
 				!q ||
 				item.name.toLowerCase().includes(q) ||
-				item.sku.toLowerCase().includes(q) ||
-				item.category.toLowerCase().includes(q);
+				(item.sku && item.sku.toLowerCase().includes(q)) ||
+				(item.categories && item.categories.some(c => c.toLowerCase().includes(q)));
 
 			return matchesStatus && matchesSearch;
 		});
@@ -80,17 +85,17 @@ export default function StoreProducts() {
 
 	function openEditForm(product: StoreProduct) {
 		setForm({
-			id: product.id,
+			id: product._id || product.id,
 			name: product.name,
-			sku: product.sku,
-			category: product.category,
+			sku: product.sku || '',
+			category: product.categories?.[0] || '',
 			price: String(product.price),
-			mrp: String(product.mrp),
+			mrp: String(product.mrp || product.price),
 			stock: String(product.stock),
 			status: product.status,
-			image: product.image,
+			image: product.image || (product.images?.[0] || ''),
 			description: product.description,
-			tags: product.tags.join(', '),
+			tags: (product.tags || []).join(', '),
 		});
 		setMessage('');
 		setShowForm(true);
@@ -104,7 +109,7 @@ export default function StoreProducts() {
 		const payload = {
 			name: form.name.trim(),
 			sku: form.sku.trim(),
-			category: form.category.trim(),
+			categories: [form.category.trim()],
 			price: Number(form.price),
 			mrp: Number(form.mrp),
 			stock: Number(form.stock),
@@ -129,21 +134,26 @@ export default function StoreProducts() {
 			setShowForm(false);
 			setForm(emptyForm);
 			await loadProducts();
-		} catch {
-			setMessage('Unable to save product right now.');
+		} catch (err: any) {
+			setMessage(err.message || 'Unable to save product right now.');
 		} finally {
 			setSaving(false);
 		}
 	}
 
-	async function handleDelete(id: number) {
+	async function handleDelete(id: string | number) {
 		const isConfirmed = window.confirm('Delete this product? This action cannot be undone.');
 		if (!isConfirmed) {
 			return;
 		}
 
-		await deleteStoreProduct(id);
-		await loadProducts();
+		try {
+			await deleteStoreProduct(id);
+			await loadProducts();
+		} catch (error) {
+			console.error('Failed to delete product:', error);
+			alert('Failed to delete product.');
+		}
 	}
 
 	function statusBadge(status: ProductStatus) {
@@ -225,21 +235,21 @@ export default function StoreProducts() {
 								</thead>
 								<tbody>
 									{filteredProducts.map((product) => (
-										<tr key={product.id} className="border-t border-gray-100">
+										<tr key={product._id || product.id} className="border-t border-gray-100">
 											<td className="px-4 py-3 min-w-72">
 												<div className="flex items-center gap-3">
 													<img
-														src={product.image}
+														src={product.image || (product.images?.[0] || '')}
 														alt={product.name}
 														className="w-12 h-12 rounded-lg bg-gray-50 object-contain border border-gray-100"
 													/>
 													<div>
 														<p className="font-semibold text-gray-900">{product.name}</p>
-														<p className="text-xs text-gray-500">{product.sku} · {product.category}</p>
+														<p className="text-xs text-gray-500">{product.sku} · {product.categories?.[0]}</p>
 													</div>
 												</div>
 											</td>
-											<td className="px-4 py-3 text-gray-700">₹{product.price.toFixed(2)}</td>
+											<td className="px-4 py-3 text-gray-700">₹{product.price.toFixed(0)}</td>
 											<td className="px-4 py-3 text-gray-700">{product.stock}</td>
 											<td className="px-4 py-3">
 												<span className={`inline-flex px-2.5 py-1 rounded-full border text-xs font-semibold ${statusBadge(product.status)}`}>
@@ -252,7 +262,7 @@ export default function StoreProducts() {
 											<td className="px-4 py-3">
 												<div className="flex justify-end gap-2">
 													<Link
-														to={`/store/products/${product.id}`}
+														to={`/store/products/${product._id || product.id}`}
 														className="w-8 h-8 inline-flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:text-primary hover:border-primary/30"
 														title="View product"
 													>
@@ -268,7 +278,7 @@ export default function StoreProducts() {
 													</button>
 													<button
 														type="button"
-														onClick={() => handleDelete(product.id)}
+														onClick={() => handleDelete(product._id || product.id)}
 														className="w-8 h-8 inline-flex items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:text-danger hover:border-danger/30"
 														title="Delete product"
 													>

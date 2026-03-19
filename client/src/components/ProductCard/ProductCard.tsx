@@ -1,20 +1,7 @@
 import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-export interface Product {
-  id: number;
-  name: string;
-  image: string;
-  price: number;
-  originalPrice: number;
-  discount: number;
-  rating: number;
-  reviews: number;
-  badge?: string;
-  badgeColor?: string;
-  label?: string;
-  labelColor?: string;
-}
+import type { Product } from '../../types/api';
 
 interface ProductCardProps {
   product: Product;
@@ -29,18 +16,21 @@ export default function ProductCard({
     name,
     image,
     price,
-    originalPrice,
     rating,
-    reviews,
-    badge,
-    badgeColor,
-    label,
-    labelColor,
+    rating_count: reviews = 0,
   } = product;
+
+  // Calculate original price and discount badge if not present
+  const discountPercent = product.discount?.[0] || 0;
+  const originalPrice = product.mrp || Math.round(price / (1 - discountPercent / 100));
+  const badge = discountPercent > 0 ? `-${discountPercent}%` : undefined;
+  const badgeColor = '#ff6161';
+  const label = product.stock < 10 ? 'Few Left' : 'Free Delivery';
+  const labelColor = product.stock < 10 ? '#ff9f00' : '#388e3c';
 
   if (variant === 'deal') {
     return (
-      <Link to={`/product/${product.id}`} className="group bg-white rounded-xl p-4 min-w-[180px] w-[200px] flex-shrink-0 cursor-pointer transition-all duration-250 hover:shadow-card-hover hover:-translate-y-1 border border-gray-100 block">
+      <Link to={`/product/${product.id || product._id}`} className="group bg-white rounded-xl p-4 min-w-[180px] w-[200px] flex-shrink-0 cursor-pointer transition-all duration-250 hover:shadow-card-hover hover:-translate-y-1 border border-gray-100 block">
         {/* Image */}
         <div className="relative aspect-square mb-3 flex items-center justify-center overflow-hidden rounded-lg bg-gray-50">
           {badge && (
@@ -81,7 +71,7 @@ export default function ProductCard({
   // Recommended variant
   return (
     <div className="group bg-white rounded-xl overflow-hidden transition-all duration-250 hover:shadow-card-hover hover:-translate-y-1 cursor-pointer border border-gray-100">
-      <Link to={`/product/${product.id}`} className="block">
+      <Link to={`/product/${product.id || product._id}`} className="block">
         {/* Image */}
         <div className="relative aspect-square p-4 flex items-center justify-center bg-gray-50">
           <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-300 hover:text-danger transition-colors duration-150 z-10 opacity-0 group-hover:opacity-100">

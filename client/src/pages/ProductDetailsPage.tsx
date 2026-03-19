@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header/Header';
 import Footer from '../components/Footer/Footer';
+import { getProductById, addToCart } from '../utils/api';
+import type { Product } from '../types/api';
 import { 
   Star, 
   ShoppingCart, 
@@ -15,64 +17,86 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-import headphonesImg from '../assets/headphones.png';
-import shoesImg from '../assets/shoes.png';
-
-// Mock products data
-const products = [
-  {
-    id: 1,
-    name: 'Premium Noise Cancelling Wireless Over-Ear Headphones',
-    image: headphonesImg,
-    price: 299,
-    originalPrice: 399,
-    discount: 25,
-    rating: 4.8,
-    reviews: 1250,
-    description: 'Experience world-class noise cancellation with these premium wireless headphones. Featuring up to 30 hours of battery life, touch controls, and crystal-clear sound quality.',
-    features: [
-      'Industry-leading noise cancellation',
-      '30-hour battery life',
-      'Touch sensor controls',
-      'Quick charge (10 min for 5 hours playback)',
-      'Superior call quality'
-    ],
-    category: 'Electronics',
-    stock: 15,
-    brand: 'SonicMaster'
-  },
-  {
-    id: 2,
-    name: "Men's Speed Running Shoes - Breathable Mesh",
-    image: shoesImg,
-    price: 85,
-    originalPrice: 120,
-    discount: 29,
-    rating: 4.5,
-    reviews: 850,
-    description: 'Lightweight and breathable running shoes designed for speed and comfort. Perfect for daily runs and intense workouts.',
-    features: [
-      'Breathable mesh upper',
-      'Responsive cushioning',
-      'Durable rubber outsole',
-      'Lightweight design',
-      'Supportive fit'
-    ],
-    category: 'Footwear',
-    stock: 5,
-    brand: 'FitRun'
-  }
-];
-
 export default function ProductDetailsPage() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [selectedImage, setSelectedImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  
-  // Find product or use default
-  const product = products.find(p => p.id === Number(id)) || products[0];
+  const [addingToCart, setAddingToCart] = useState(false);
 
-  const images = [product.image, product.image, product.image]; // Mock multiple images
+  const handleAddToCart = async (goToCart = false) => {
+    if (!id) return;
+    try {
+      setAddingToCart(true);
+      await addToCart(id, 1);
+      if (goToCart) {
+        navigate('/cart');
+      } else {
+        alert('Product added to cart!');
+      }
+    } catch (err: any) {
+      console.error('Failed to add to cart:', err);
+      if (err.status === 401) {
+        navigate('/login', { state: { from: { pathname: `/product/${id}` } } });
+      } else {
+        alert(err.message || 'Failed to add to cart');
+      }
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  useEffect(() => {
+    async function fetchProduct() {
+      if (!id) return;
+      try {
+        setLoading(true);
+        const data = await getProductById(id);
+        setProduct(data);
+      } catch (err: any) {
+        console.error('Failed to fetch product:', err);
+        setError(err.message || 'Product not found');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProduct();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-[60vh] flex flex-col items-center justify-center p-4">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Oops!</h2>
+          <p className="text-gray-500 mb-6">{error || 'Product not found'}</p>
+          <Link to="/" className="px-6 py-2 bg-primary text-white rounded-lg font-bold">
+            Back to Home
+          </Link>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  const images = product.images && product.images.length > 0 ? product.images : [product.image || ''];
+  const discountPercent = product.discount?.[0] || 0;
+  const originalPrice = product.mrp || Math.round(product.price / (1 - discountPercent / 100));
 
   return (
     <>
@@ -84,7 +108,7 @@ export default function ProductDetailsPage() {
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <Link to="/" className="hover:text-primary transition-colors">Home</Link>
               <ChevronRight size={12} />
-              <span className="hover:text-primary cursor-pointer">{product.category}</span>
+              <span className="hover:text-primary cursor-pointer">{product.categories?.[0] || 'Uncategorized'}</span>
               <ChevronRight size={12} />
               <span className="text-gray-900 font-medium truncate">{product.name}</span>
             </div>
@@ -103,42 +127,50 @@ export default function ProductDetailsPage() {
                       <button
                         key={idx}
                         onClick={() => setSelectedImage(idx)}
-                        className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 flex items-center justify-center p-2 bg-gray-50 transition-all ${
-                          selectedImage === idx ? 'border-primary' : 'border-transparent hover:border-gray-200'
+                        className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 flex items-center justify-center p-1.5 bg-gray-50 transition-all shrink-0 ${
+                          selectedImage === idx ? 'border-primary shadow-sm' : 'border-transparent hover:border-gray-200'
                         }`}
                       >
-                        <img src={img} alt="" className="max-w-full max-h-full object-contain" />
+                        <img src={img} alt="" className="w-full h-full object-contain" />
                       </button>
                     ))}
                   </div>
                   
                   {/* Main Image */}
-                  <div className="flex-1 aspect-square bg-gray-50 rounded-2xl flex items-center justify-center p-8 relative overflow-hidden group">
+                  <div className="flex-1 aspect-[1/1] sm:aspect-[4/5] md:aspect-square lg:aspect-[4/5] bg-gray-50 rounded-2xl flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden group shadow-sm border border-gray-100">
                     <button 
                       onClick={() => setIsWishlisted(!isWishlisted)}
-                      className={`absolute top-4 right-4 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center transition-all ${
+                      className={`absolute top-4 right-4 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center transition-all z-10 ${
                         isWishlisted ? 'text-danger' : 'text-gray-300 hover:text-danger'
                       }`}
                     >
                       <Heart size={20} fill={isWishlisted ? 'currentColor' : 'none'} />
                     </button>
-                    <button className="absolute top-16 right-4 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-gray-400 hover:text-primary transition-all">
+                    <button className="absolute top-16 right-4 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-gray-400 hover:text-primary transition-all z-10">
                       <Share2 size={18} />
                     </button>
                     <img 
                       src={images[selectedImage]} 
                       alt={product.name} 
-                      className="max-w-full max-h-full object-contain transform group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-700"
                     />
                   </div>
                 </div>
 
                 {/* Buy Buttons - Desktop */}
                 <div className="hidden lg:flex gap-4 mt-8">
-                  <button className="flex-1 py-4 bg-yellow hover:bg-yellow-dark text-gray-900 font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 uppercase tracking-wide">
-                    <ShoppingCart size={20} /> Add to Cart
+                  <button 
+                    onClick={() => handleAddToCart(false)}
+                    disabled={addingToCart || product.stock === 0}
+                    className="flex-1 py-4 bg-yellow hover:bg-yellow-dark text-gray-900 font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 uppercase tracking-wide disabled:opacity-50"
+                  >
+                    <ShoppingCart size={20} /> {addingToCart ? 'Adding...' : 'Add to Cart'}
                   </button>
-                  <button className="flex-1 py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 uppercase tracking-wide">
+                  <button 
+                    onClick={() => handleAddToCart(true)}
+                    disabled={addingToCart || product.stock === 0}
+                    className="flex-1 py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 uppercase tracking-wide disabled:opacity-50"
+                  >
                     <Zap size={20} /> Buy Now
                   </button>
                 </div>
@@ -148,7 +180,9 @@ export default function ProductDetailsPage() {
             {/* Right Column - Details */}
             <div className="lg:w-[55%] pb-10">
               <div className="mb-6">
-                <span className="text-sm font-semibold text-primary mb-2 block uppercase tracking-wider">{product.brand}</span>
+                <span className="text-sm font-semibold text-primary mb-2 block uppercase tracking-wider">
+                  {typeof product.store === 'object' ? product.store.name : 'Zepkart Assured'}
+                </span>
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4 leading-tight">
                   {product.name}
                 </h1>
@@ -159,19 +193,26 @@ export default function ProductDetailsPage() {
                     {product.rating} <Star size={14} fill="currentColor" />
                   </div>
                   <span className="text-sm font-medium text-gray-400">
-                    {product.reviews.toLocaleString()} Ratings & {Math.floor(product.reviews/5)} Reviews
+                    {product.rating_count.toLocaleString()} Ratings
                   </span>
                 </div>
 
                 {/* Price */}
                 <div className="flex items-baseline gap-4 mb-4">
                   <span className="text-3xl font-bold text-gray-900">₹{product.price}</span>
-                  <span className="text-lg text-gray-400 line-through">₹{product.originalPrice}</span>
-                  <span className="text-lg font-bold text-success">{product.discount}% off</span>
+                  {discountPercent > 0 && (
+                    <>
+                      <span className="text-lg text-gray-400 line-through">₹{originalPrice}</span>
+                      <span className="text-lg font-bold text-success">{discountPercent}% off</span>
+                    </>
+                  )}
                 </div>
                 
-                {product.stock <= 5 && (
+                {product.stock < 10 && product.stock > 0 && (
                   <p className="text-sm font-bold text-danger mb-6">Hurry, only {product.stock} left!</p>
+                )}
+                {product.stock === 0 && (
+                  <p className="text-sm font-bold text-danger mb-6">Out of Stock</p>
                 )}
 
                 {/* Offers */}
@@ -213,17 +254,28 @@ export default function ProductDetailsPage() {
                 {/* Description */}
                 <div className="mb-8">
                   <h3 className="text-lg font-bold text-gray-900 mb-3">Product Description</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4 whitespace-pre-line">
                     {product.description}
                   </p>
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
-                    {product.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center gap-3 text-sm text-gray-600">
-                        <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
+                  {product.misc && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Specifications</h4>
+                      <dl className="grid grid-cols-2 gap-2 text-sm">
+                        {product.sku && (
+                          <>
+                            <dt className="text-gray-500">SKU</dt>
+                            <dd className="font-medium text-gray-900">{product.sku}</dd>
+                          </>
+                        )}
+                        {product.misc.warranty && (
+                          <>
+                            <dt className="text-gray-500">Warranty</dt>
+                            <dd className="font-medium text-gray-900">{product.misc.warranty}</dd>
+                          </>
+                        )}
+                      </dl>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -232,10 +284,18 @@ export default function ProductDetailsPage() {
 
         {/* Mobile Fixed CTA */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-3 z-40 flex gap-3">
-          <button className="flex-1 py-3 border border-gray-200 text-gray-900 font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:bg-gray-50">
-            <ShoppingCart size={20} /> Add to Cart
+          <button 
+            onClick={() => handleAddToCart(false)}
+            disabled={addingToCart || product.stock === 0}
+            className="flex-1 py-3 border border-gray-200 text-gray-900 font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:bg-gray-50 disabled:opacity-50"
+          >
+            <ShoppingCart size={20} /> {addingToCart ? '...' : 'Add to Cart'}
           </button>
-          <button className="flex-1 py-3 bg-primary text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:bg-primary-dark">
+          <button 
+            onClick={() => handleAddToCart(true)}
+            disabled={addingToCart || product.stock === 0}
+            className="flex-1 py-3 bg-primary text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:bg-primary-dark disabled:opacity-50"
+          >
             <Zap size={20} /> Buy Now
           </button>
         </div>

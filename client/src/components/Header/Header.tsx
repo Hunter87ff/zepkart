@@ -8,7 +8,10 @@ import {
     Menu,
     X,
     ChevronDown,
+    LogOut,
+    Store as StoreIcon,
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const categories = [
     "For You", //default selected
@@ -22,6 +25,7 @@ const categories = [
 export default function Header() {
     const [searchQuery, setSearchQuery] = useState('');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const { user, logout, isAuthenticated, isStoreOwner } = useAuth();
     const navigate = useNavigate();
 
     const handleSearch = (e: React.FormEvent) => {
@@ -76,7 +80,7 @@ export default function Header() {
                                 </span>
                             </Link>
                             <button
-                                onClick={() => navigate('/login')}
+                                onClick={() => isAuthenticated ? (user?.permissions?.admin || user?.permissions?.store_owner ? navigate('/store') : navigate('/orders')) : navigate('/login')}
                                 className="p-2 text-gray-600 hover:text-primary transition-colors"
                             >
                                 <User size={22} />
@@ -142,14 +146,40 @@ export default function Header() {
                             <span className="text-[10px] font-semibold mt-0.5">Cart</span>
                         </Link>
 
-                        <button
-                            id="nav-login"
-                            onClick={() => navigate('/login')}
-                            className="ml-2 flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95"
-                        >
-                            <User size={16} />
-                            <span>Login</span>
-                        </button>
+                        {isAuthenticated ? (
+                            <div className="flex items-center gap-2">
+                                {isStoreOwner && (
+                                    <Link
+                                        to="/store"
+                                        className="flex flex-col items-center px-3 py-1.5 rounded-lg hover:bg-gray-50 text-gray-600 hover:text-primary transition-all"
+                                    >
+                                        <StoreIcon size={20} />
+                                        <span className="text-[10px] font-semibold mt-0.5">Store</span>
+                                    </Link>
+                                )}
+                                <div className="flex flex-col items-end mr-2">
+                                    <span className="text-xs font-bold text-gray-900">{user?.name}</span>
+                                    <button 
+                                        onClick={logout}
+                                        className="text-[10px] text-primary hover:underline font-semibold"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 overflow-hidden">
+                                    <img src={user?.avatar} alt={user?.name} className="w-full h-full object-cover" />
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                id="nav-login"
+                                onClick={() => navigate('/login')}
+                                className="ml-2 flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95"
+                            >
+                                <User size={16} />
+                                <span>Login</span>
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -185,8 +215,19 @@ export default function Header() {
                     >
                         <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-primary text-white">
                             <div className="flex items-center gap-2">
-                                <User size={20} />
-                                <span className="font-semibold">Guest User</span>
+                                {isAuthenticated ? (
+                                    <>
+                                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border border-white/30">
+                                            <img src={user?.avatar} alt={user?.name} className="w-full h-full object-cover" />
+                                        </div>
+                                        <span className="font-semibold">{user?.name}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <User size={20} />
+                                        <span className="font-semibold">Guest User</span>
+                                    </>
+                                )}
                             </div>
                             <button onClick={() => setMobileMenuOpen(false)}>
                                 <X size={24} />
@@ -230,12 +271,28 @@ export default function Header() {
                         </div>
                         
                         <div className="p-4 border-t border-gray-100 pb-8">
-                            <button 
-                                onClick={() => navigate('/login')}
-                                className="w-full py-3 bg-primary text-white rounded-xl font-bold shadow-md shadow-primary/20 active:scale-[0.98] transition-all"
-                            >
-                                Login / Signup
-                            </button>
+                            {isAuthenticated ? (
+                                <button 
+                                    onClick={() => {
+                                        logout();
+                                        setMobileMenuOpen(false);
+                                    }}
+                                    className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-bold active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                >
+                                    <LogOut size={18} />
+                                    Logout
+                                </button>
+                            ) : (
+                                <button 
+                                    onClick={() => {
+                                        navigate('/login');
+                                        setMobileMenuOpen(false);
+                                    }}
+                                    className="w-full py-3 bg-primary text-white rounded-xl font-bold shadow-md shadow-primary/20 active:scale-[0.98] transition-all"
+                                >
+                                    Login / Signup
+                                </button>
+                            )}
                         </div>
                     </aside>
                 </div>

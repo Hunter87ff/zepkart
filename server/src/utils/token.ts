@@ -47,7 +47,7 @@ export class Token {
     constructor(object: TokenPayload) {
         this.id = object.id || null;
         this.name = object.name || 'Guest';
-        this.expireAt = config.jwtExpiration;
+        this.expireAt = object.expireAt || config.jwtExpiration;
         this.permissions = new Permissions(object.permissions || [PermissionLevels.user]);
         object.jwt && (this.jwt = object.jwt);
     }
@@ -55,13 +55,13 @@ export class Token {
     static fromToken(token: string) {
         try {
             const decoded = verify(token, config.jwtSecret) as JwtPayload;
-            const _id = decoded._id || null;
+            const id = decoded.id || decoded._id || null;
             const name = String(decoded.name || 'Guest');
             const permissions = decoded.permissions || [PermissionLevels.user];
             const expireAt = decoded.expireAt || config.jwtExpiration;
 
             return new Token({
-                id: _id,
+                id,
                 name,
                 permissions,
                 expireAt,
@@ -73,10 +73,14 @@ export class Token {
     }
 
     save() {
+        const expiresIn = typeof this.expireAt === 'string' && !isNaN(Number(this.expireAt)) 
+            ? parseInt(this.expireAt) 
+            : this.expireAt;
+        
         const _token = sign(
             this.toJSON(), 
             config.jwtSecret, 
-            { expiresIn: typeof this.expireAt === 'number' ? this.expireAt : parseInt(this.expireAt as string) }
+            { expiresIn: expiresIn as any }
         );
         this.jwt = _token;
         return _token;
@@ -86,7 +90,7 @@ export class Token {
         return {
             id: this.id,
             name: this.name,
-            permissions: this.permissions.toJSON(),
+            permissions: this.permissions.perms,
             expireAt: this.expireAt,
             jwt: this.jwt || null,
         };

@@ -3,8 +3,8 @@
 const appConfig = {
     port: process.env.PORT || 8000,
     jwtSecret: process.env.JWT_SECRET || 'your_strong_jwt_secret',
-    jwtExpiration: process.env.JWT_EXPIRATION || '30d',
-    mongoURI: process.env.MONGO_URI,
+    jwtExpiration: process.env.JWT_EXPIRATION || 29 * 24 * 60 * 60 * 1000,
+    mongoURI: process.env.MONGO_URI || 'mongodb://localhost:27017/zepkart',
     debug_mode: process.env.DEBUG_MODE === 'true',
 }
 

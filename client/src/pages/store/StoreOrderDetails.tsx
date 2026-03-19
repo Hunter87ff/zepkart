@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Layout from '../../components/Layout/Layout';
 import {
-	getStoreOrderById,
+	getOrderById,
 	updateStoreOrder,
 	type OrderStatus,
-	type StoreOrder,
+	type Order,
 } from '../../utils/api';
 import { ArrowLeft, Save } from 'lucide-react';
 
@@ -20,7 +20,8 @@ const allStatuses: OrderStatus[] = [
 
 export default function StoreOrderDetails() {
 	const { id } = useParams();
-	const [order, setOrder] = useState<StoreOrder | null>(null);
+	const [order, setOrder] = useState<Order | null>(null);
+    const [items, setItems] = useState<any[]>([]);
 	const [status, setStatus] = useState<OrderStatus>('pending');
 	const [notes, setNotes] = useState('');
 	const [message, setMessage] = useState('');
@@ -33,13 +34,19 @@ export default function StoreOrderDetails() {
 				return;
 			}
 
-			const data = await getStoreOrderById(id);
-			if (data) {
-				setOrder(data);
-				setStatus(data.status);
-				setNotes(data.notes);
-			}
-			setLoading(false);
+			try {
+                const data = await getOrderById(id);
+                if (data) {
+                    setOrder(data.order);
+                    setItems(data.items);
+                    setStatus(data.order.status);
+                    setNotes((data.order as any).notes || '');
+                }
+            } catch (error) {
+                console.error('Failed to load order:', error);
+            } finally {
+                setLoading(false);
+            }
 		}
 
 		loadOrder();
@@ -51,12 +58,17 @@ export default function StoreOrderDetails() {
 			return;
 		}
 
-		const updated = await updateStoreOrder(order.id, {
-			status,
-			notes,
-		});
-		setOrder(updated);
-		setMessage('Order updated successfully.');
+		try {
+            const updated = await updateStoreOrder(order._id || order.id!, {
+                status,
+                notes,
+            });
+            setOrder(updated);
+            setMessage('Order updated successfully.');
+        } catch (error) {
+            console.error('Failed to update order:', error);
+            setMessage('Failed to update order.');
+        }
 	}
 
 	if (loading) {
@@ -86,8 +98,6 @@ export default function StoreOrderDetails() {
 		);
 	}
 
-	const subtotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
 	return (
 		<Layout>
 			<div className="max-w-[1200px] mx-auto px-4 lg:px-6 py-8 space-y-6">
@@ -95,7 +105,7 @@ export default function StoreOrderDetails() {
 					<Link to="/store/orders" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary mb-3">
 						<ArrowLeft size={15} /> Back to orders
 					</Link>
-					<h1 className="text-2xl font-bold text-gray-900">{order.id}</h1>
+					<h1 className="text-2xl font-bold text-gray-900 font-mono text-lg">#{order._id.slice(-8).toUpperCase()}</h1>
 					<p className="text-sm text-gray-500 mt-1">
 						Placed on {new Date(order.createdAt).toLocaleString()} · Last updated {new Date(order.updatedAt).toLocaleString()}
 					</p>
@@ -112,16 +122,20 @@ export default function StoreOrderDetails() {
 						<h2 className="text-lg font-bold text-gray-900 mb-4">Items</h2>
 
 						<div className="space-y-3">
-							{order.items.map((item) => (
-								<article key={`${item.productId}-${item.productName}`} className="border border-gray-100 rounded-xl p-3 flex items-center gap-3">
-									<img src={item.image} alt={item.productName} className="w-14 h-14 rounded-lg border border-gray-100 bg-gray-50 object-contain p-1" />
+							{items.map((item, idx) => (
+								<article key={idx} className="border border-gray-100 rounded-xl p-3 flex items-center gap-3">
+									<img 
+                                        src={item.product?.image || (item.product?.images?.[0] || '')} 
+                                        alt={item.product?.name} 
+                                        className="w-14 h-14 rounded-lg border border-gray-100 bg-gray-50 object-contain p-1" 
+                                    />
 									<div className="flex-1">
-										<p className="font-semibold text-gray-900 text-sm">{item.productName}</p>
+										<p className="font-semibold text-gray-900 text-sm">{item.product?.name || 'Unknown Product'}</p>
 										<p className="text-xs text-gray-500 mt-1">
-											Qty: {item.quantity} · ₹{item.price.toFixed(2)} each
+											Qty: {item.quantity} · ₹{item.price.toFixed(0)} each
 										</p>
 									</div>
-									<p className="font-semibold text-gray-900 text-sm">₹{(item.price * item.quantity).toFixed(2)}</p>
+									<p className="font-semibold text-gray-900 text-sm">₹{(item.price * item.quantity).toFixed(0)}</p>
 								</article>
 							))}
 						</div>
@@ -129,15 +143,11 @@ export default function StoreOrderDetails() {
 						<div className="mt-5 border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-600">
 							<p className="flex justify-between">
 								<span>Subtotal</span>
-								<strong className="text-gray-800">₹{subtotal.toFixed(2)}</strong>
-							</p>
-							<p className="flex justify-between">
-								<span>Shipping</span>
-								<strong className="text-gray-800">₹{order.shippingCharge.toFixed(2)}</strong>
+								<strong className="text-gray-800">₹{order.total_amount.toFixed(0)}</strong>
 							</p>
 							<p className="flex justify-between text-base">
 								<span className="font-semibold text-gray-900">Order Total</span>
-								<strong className="text-gray-900">₹{order.total.toFixed(2)}</strong>
+								<strong className="text-gray-900">₹{order.total_amount.toFixed(0)}</strong>
 							</p>
 						</div>
 					</div>
@@ -146,11 +156,10 @@ export default function StoreOrderDetails() {
 						<h2 className="text-lg font-bold text-gray-900 mb-4">Customer & Fulfilment</h2>
 
 						<div className="space-y-2 text-sm text-gray-600 mb-5">
-							<p><span className="text-gray-400">Name:</span> {order.customerName}</p>
-							<p><span className="text-gray-400">Email:</span> {order.customerEmail}</p>
-							<p><span className="text-gray-400">Phone:</span> {order.customerPhone}</p>
-							<p><span className="text-gray-400">Address:</span> {order.shippingAddress}</p>
-							<p><span className="text-gray-400">Payment:</span> {order.paymentMethod} ({order.paymentStatus})</p>
+							<p><span className="text-gray-400">Name:</span> {(order.user as any)?.name || 'Customer'}</p>
+							<p><span className="text-gray-400">Email:</span> {(order.user as any)?.email || ''}</p>
+							<p><span className="text-gray-400">Address:</span> {typeof order.address === 'object' ? `${order.address.address_line}, ${order.address.city}` : order.address}</p>
+							<p><span className="text-gray-400">Payment:</span> {order.payment_status}</p>
 						</div>
 
 						<form onSubmit={handleSave} className="space-y-4">
@@ -192,4 +201,3 @@ export default function StoreOrderDetails() {
 		</Layout>
 	);
 }
-

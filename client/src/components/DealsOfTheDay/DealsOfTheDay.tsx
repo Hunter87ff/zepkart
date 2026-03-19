@@ -1,100 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Flame, ChevronLeft, ChevronRight } from 'lucide-react';
-import ProductCard, { type Product } from '../ProductCard/ProductCard';
-
-// Import product images
-import headphonesImg from '../../assets/headphones.png';
-import shoesImg from '../../assets/shoes.png';
-import laptopImg from '../../assets/laptop.png';
-import cameraImg from '../../assets/camera.png';
-import smartphoneImg from '../../assets/smartphone.png';
-
-const dealProducts: Product[] = [
-  {
-    id: 1,
-    name: 'Sony Noise Cancelling Headphones',
-    image: headphonesImg,
-    price: 149,
-    originalPrice: 249,
-    discount: 40,
-    rating: 4.5,
-    reviews: 1204,
-    badge: '-40%',
-    badgeColor: '#ff6161',
-    label: 'Free Delivery',
-    labelColor: '#388e3c',
-  },
-  {
-    id: 2,
-    name: 'Nike Air Zoom Pegasus',
-    image: shoesImg,
-    price: 89,
-    originalPrice: 120,
-    discount: 25,
-    rating: 4.2,
-    reviews: 850,
-    badge: '-25%',
-    badgeColor: '#ff6161',
-    label: 'Best Seller',
-    labelColor: '#fb641b',
-  },
-  {
-    id: 3,
-    name: 'MacBook Air M2 Chip',
-    image: laptopImg,
-    price: 999,
-    originalPrice: 1199,
-    discount: 15,
-    rating: 4.8,
-    reviews: 2300,
-    badge: '-15%',
-    badgeColor: '#ff9f00',
-    label: 'Few Left',
-    labelColor: '#ff9f00',
-  },
-  {
-    id: 4,
-    name: 'Polaroid Now I-Type',
-    image: cameraImg,
-    price: 99,
-    originalPrice: 140,
-    discount: 30,
-    rating: 4.0,
-    reviews: 450,
-    badge: '-30%',
-    badgeColor: '#ff6161',
-    label: 'Free Delivery',
-    labelColor: '#388e3c',
-  },
-  {
-    id: 5,
-    name: 'Samsung Galaxy S23',
-    image: smartphoneImg,
-    price: 799,
-    originalPrice: 899,
-    discount: 10,
-    rating: 4.6,
-    reviews: 3105,
-    badge: '-10%',
-    badgeColor: '#388e3c',
-    label: 'Exchange Offer',
-    labelColor: '#fb641b',
-  },
-  {
-    id: 43,
-    name: 'Sony Noise Cancelling Headphones',
-    image: headphonesImg,
-    price: 149,
-    originalPrice: 249,
-    discount: 40,
-    rating: 4.5,
-    reviews: 1204,
-    badge: '-40%',
-    badgeColor: '#ff6161',
-    label: 'Free Delivery',
-    labelColor: '#388e3c',
-  },
-];
+import ProductCard from '../ProductCard/ProductCard';
+import { getProducts } from '../../utils/api';
+import type { Product } from '../../types/api';
 
 function useCountdown(targetHours = 14, targetMinutes = 23, targetSeconds = 51) {
   const [time, setTime] = useState({
@@ -133,6 +41,22 @@ function useCountdown(targetHours = 14, targetMinutes = 23, targetSeconds = 51) 
 export default function DealsOfTheDay() {
   const { hours, minutes, seconds } = useCountdown();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchDeals() {
+      try {
+        const data = await getProducts({ limit: 10 });
+        setProducts(data);
+      } catch (error) {
+        console.error('Failed to fetch deals:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDeals();
+  }, []);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -144,7 +68,7 @@ export default function DealsOfTheDay() {
   const pad = (n: number) => String(n).padStart(2, '0');
 
   return (
-    <section id="deals-section" className="max-w-350 mx-auto px-4 lg:px-6 py-6">
+    <section id="deals-section" className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
       <div className="bg-white rounded-2xl shadow-card p-5 sm:p-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
@@ -193,13 +117,19 @@ export default function DealsOfTheDay() {
             className="flex gap-4 overflow-x-auto scrollbar-hide pb-2"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {dealProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                variant="deal"
-              />
-            ))}
+            {loading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="min-w-[180px] w-[200px] h-[300px] bg-gray-50 animate-pulse rounded-xl" />
+              ))
+            ) : (
+              products.map((product) => (
+                <ProductCard
+                  key={product.id || product._id}
+                  product={product}
+                  variant="deal"
+                />
+              ))
+            )}
           </div>
 
           <button

@@ -1,8 +1,45 @@
+import { useState } from 'react';
 import Layout from '../components/Layout/Layout';
 import { CheckCircle, Rocket, ShieldCheck, PieChart, Users } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { createStore } from '../utils/api';
 
 export default function BecomeSellerPage() {
+  const { user, isAuthenticated, refreshUser } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleStartSelling = async () => {
+    if (!isAuthenticated) {
+      navigate('/login?redirect=/become-seller');
+      return;
+    }
+
+    if (user?.permissions?.store_owner || user?.permissions?.admin) {
+      navigate('/store');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    try {
+      // Create a default store for the user
+      await createStore({
+        name: `${user?.name}'s Store`,
+        description: 'Welcome to my new store on ZepKart!',
+        contact_email: user?.email,
+      });
+      await refreshUser(); // Update user role/data
+      navigate('/store');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to create store. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Layout bgWhite>
       <div className="max-w-[1200px] mx-auto px-4 py-16">
@@ -15,13 +52,15 @@ export default function BecomeSellerPage() {
             <p className="text-xl text-gray-600 mb-8 max-w-xl mx-auto lg:mx-0">
               Join thousands of successful sellers and reach millions of customers across the country with our platform.
             </p>
+            {error && <p className="text-danger text-sm mb-4 font-semibold">{error}</p>}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Link
-                to="/store"
-                className="px-8 py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95 inline-flex items-center justify-center"
+              <button
+                onClick={handleStartSelling}
+                disabled={loading}
+                className="px-8 py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95 inline-flex items-center justify-center disabled:opacity-70"
               >
-                Start Selling Now
-              </Link>
+                {loading ? 'Setting up your store...' : 'Start Selling Now'}
+              </button>
               <button className="px-8 py-4 border-2 border-gray-100 hover:border-primary/20 hover:bg-primary/5 text-gray-700 font-bold rounded-2xl transition-all">
                 View Seller Guide
               </button>
