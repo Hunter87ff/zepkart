@@ -14,6 +14,13 @@ export  default class ProductsController {
      **/  
     static async getProductById(req: Request, res: Response) {}
 
+
+    /** returns reviews for a product
+     * @route GET /products/:id/reviews?page=1
+     * @access Public
+     */
+    static async getProductReviews(req: Request, res: Response) {}
+
     /** creates a new product
      * @route POST /products
      * @access StoreOwner, Manager, Admin

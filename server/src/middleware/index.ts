@@ -44,8 +44,8 @@ function init(app: e.Application) {
     app.use(cookieParser());
     app.use(e.static('public'));
     app.use(e.urlencoded({ extended: true }));
-    app.set('view engine', 'ejs');
-    app.set('views', path.join(__dirname, '..', 'assets'));
+    // app.set('view engine', 'ejs');
+    // app.set('views', path.join(__dirname, '..', 'assets'));
 
     app.logger = logger;
     app.helper = Helper;

@@ -14,6 +14,11 @@ import ShippingPage from './pages/ShippingPage';
 import ReturnPolicyPage from './pages/ReturnPolicyPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
+import Store from './pages/store/Store';
+import StoreProducts from './pages/store/StoreProducts';
+import StoreProductDetail from './pages/store/StoreProductDetail';
+import StoreOrders from './pages/store/StoreOrders';
+import StoreOrderDetails from './pages/store/StoreOrderDetails';
 
 function App() {
   return (
@@ -34,6 +39,11 @@ function App() {
         <Route path="/return-policy" element={<ReturnPolicyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/store" element={<Store />} />
+        <Route path="/store/products" element={<StoreProducts />} />
+        <Route path="/store/products/:id" element={<StoreProductDetail />} />
+        <Route path="/store/orders" element={<StoreOrders />} />
+        <Route path="/store/orders/:id" element={<StoreOrderDetails />} />
       </Routes>
     </BrowserRouter>
   );

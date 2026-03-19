@@ -1,5 +1,6 @@
 import Layout from '../components/Layout/Layout';
 import { CheckCircle, Rocket, ShieldCheck, PieChart, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function BecomeSellerPage() {
   return (
@@ -15,9 +16,12 @@ export default function BecomeSellerPage() {
               Join thousands of successful sellers and reach millions of customers across the country with our platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <button className="px-8 py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95">
+              <Link
+                to="/store"
+                className="px-8 py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95 inline-flex items-center justify-center"
+              >
                 Start Selling Now
-              </button>
+              </Link>
               <button className="px-8 py-4 border-2 border-gray-100 hover:border-primary/20 hover:bg-primary/5 text-gray-700 font-bold rounded-2xl transition-all">
                 View Seller Guide
               </button>
