@@ -246,12 +246,28 @@ export default function ProductDetailsPage() {
                   )}
                 </div>
                 
-                {product.stock < 10 && product.stock > 0 && (
-                  <p className="text-sm font-bold text-danger mb-6">Hurry, only {product.stock} left!</p>
-                )}
-                {product.stock === 0 && (
-                  <p className="text-sm font-bold text-danger mb-6">Out of Stock</p>
-                )}
+                {/* Stock Status */}
+                {(() => {
+                  const stock = product.stock;
+                  let stockInfo = { text: "In Stock", color: "text-success", dot: "bg-success", bg: "bg-success/5", border: "border-success/20" };
+                  
+                  if (stock === 0) {
+                    stockInfo = { text: "Out of Stock", color: "text-danger", dot: "bg-danger", bg: "bg-danger/5", border: "border-danger/20" };
+                  } else if (stock <= 10) {
+                    stockInfo = { text: `Hurry, only ${stock} items left!`, color: "text-danger", dot: "bg-danger", bg: "bg-danger/5", border: "border-danger/20" };
+                  } else if (stock <= 50) {
+                    stockInfo = { text: `${stock} items available`, color: "text-warning", dot: "bg-warning", bg: "bg-warning/5", border: "border-warning/20" };
+                  } else {
+                    stockInfo = { text: `${stock} items available`, color: "text-success", dot: "bg-success", bg: "bg-success/5", border: "border-success/20" };
+                  }
+
+                  return (
+                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg mb-6 border ${stockInfo.bg} ${stockInfo.border}`}>
+                      <div className={`w-2 h-2 rounded-full ${stockInfo.dot} ${stock !== 0 ? 'animate-pulse' : ''}`}></div>
+                      <span className={`text-sm font-bold ${stockInfo.color}`}>{stockInfo.text}</span>
+                    </div>
+                  );
+                })()}
 
                 {/* Offers */}
                 {product.misc?.offers && product.misc.offers.length > 0 && (

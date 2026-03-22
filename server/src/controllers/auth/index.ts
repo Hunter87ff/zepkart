@@ -76,7 +76,7 @@ export default class AuthController {
                 password: hashedPassword,
             });
 
-            const jwt = issueToken({ _id: user._id, name: user.name, permissions: [PermissionLevels.user] });
+            const jwt = issueToken({ _id: user._id, name: user.name, permissions: user.permissions });
 
             return res.handler.created(res, "Account created successfully", {
                 token: jwt,
@@ -108,7 +108,7 @@ export default class AuthController {
                 return res.handler.unAuthorized(res, "Invalid credentials");
             }
 
-            const jwt = issueToken({ _id: user._id, name: user.name });
+            const jwt = issueToken({ _id: user._id, name: user.name, permissions: user.permissions });
 
             return res.handler.success(res, "Login successful", {
                 token: jwt,
@@ -149,7 +149,7 @@ export default class AuthController {
             return res.handler.notFound(res, "User not found");
         }
 
-        const jwt = issueToken({ _id: user._id, name: user.name });
+        const jwt = issueToken({ _id: user._id, name: user.name, permissions: user.permissions });
 
         return res.handler.success(res, "Token refreshed", { token: jwt });
     }
@@ -181,7 +181,7 @@ export default class AuthController {
             await user.save();
 
             // Invalidate existing session → re-issue
-            const jwt = issueToken({ _id: user._id, name: user.name });
+            const jwt = issueToken({ _id: user._id, name: user.name, permissions: user.permissions });
 
             return res.handler.success(res, "Password updated successfully", { token: jwt });
         } catch (err) {

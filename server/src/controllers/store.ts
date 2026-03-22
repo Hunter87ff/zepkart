@@ -34,11 +34,11 @@ const updateStoreSchema = createStoreSchema.partial().refine(
 
 // ─── Helper: re-issue token with elevated perms ───────────────────────────────
 
-function elevateToStoreOwner(userId: string, name: string): string {
+function elevateToStoreOwner(userId: string, name: string, permissions: number[]): string {
     const token = new Token({
         id: userId,
         name,
-        permissions: [PermissionLevels.store_owner],
+        permissions,
     });
     const jwt = token.save();
     tokens.set(userId, jwt);
@@ -108,7 +108,14 @@ export default class StoreController {
 
             // Elevate user to store_owner and re-issue JWT
             const user = await User.findById(userId);
-            const jwt = user ? elevateToStoreOwner(userId, user.name) : null;
+            let jwt: string | null = null;
+            if (user) {
+               if(!user.permissions.includes(PermissionLevels.store_owner)){
+                   user.permissions.push(PermissionLevels.store_owner);
+                   await user.save();
+               }
+               jwt = elevateToStoreOwner(userId, user.name, user.permissions);
+            }
 
             return res.handler.created(res, "Store created", { store, token: jwt });
         } catch (err) {
