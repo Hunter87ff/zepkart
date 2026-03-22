@@ -1,5 +1,6 @@
 import { Heart, ShoppingCart, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCart } from '../../contexts/CartContext';
 
 import type { Product } from '../../types/api';
 
@@ -19,6 +20,22 @@ export default function ProductCard({
     rating,
     rating_count: reviews = 0,
   } = product;
+
+  const { addToCart } = useCart();
+  const navigate = useNavigate();
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await addToCart(product.id || product._id, 1);
+      alert('Added to cart!');
+    } catch (error: any) {
+      if (error.status === 401) {
+        navigate('/login');
+      }
+    }
+  };
 
   // Calculate original price and discount badge if not present
   const discountPercent = product.discount?.[0] || 0;
@@ -108,7 +125,10 @@ export default function ProductCard({
                 ₹{originalPrice}
               </span>
             </div>
-            <button className="w-8 h-8 rounded-lg bg-primary hover:bg-primary-dark text-white flex items-center justify-center transition-all duration-150 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0">
+            <button 
+              onClick={handleAddToCart}
+              className="w-8 h-8 rounded-lg bg-primary hover:bg-primary-dark text-white flex items-center justify-center transition-all duration-150 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0"
+            >
               <ShoppingCart size={14} />
             </button>
           </div>

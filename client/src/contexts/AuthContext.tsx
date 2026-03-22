@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getMyProfile, login as apiLogin, register as apiRegister, logout as apiLogout } from '../utils/api';
 import type { User } from '../types/api';
+import { PermissionLevels } from '../types/api';
 
 interface AuthContextType {
     user: User | null;
@@ -69,8 +70,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         refreshUser,
         isAuthenticated: !!user,
-        isStoreOwner: !!user?.permissions?.store_owner || !!user?.permissions?.admin,
-        isAdmin: !!user?.permissions?.admin,
+        isStoreOwner: !!user?.permissions?.some(p => p === PermissionLevels.store_owner || p === PermissionLevels.admin),
+        isAdmin: !!user?.permissions?.includes(PermissionLevels.admin),
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

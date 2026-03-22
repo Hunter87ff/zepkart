@@ -12,6 +12,7 @@ const updateMeSchema = z.object({
     name:  z.string().min(2).max(100).optional(),
     email: z.string().email().optional(),
     phone: z.string().regex(/^\d{10}$/, "Phone must be a 10-digit number").optional(),
+    avatar: z.string().url("Avatar must be a valid URL").optional(),
 }).refine(data => Object.keys(data).length > 0, {
     message: "At least one field is required to update",
 });
@@ -48,6 +49,7 @@ export default class UserController {
             email:  user.email,
             phone:  user.phone,
             avatar: user.avatar,
+            permissions: user.permissions,
         };
 
         cache.users.set(userId, profile);
@@ -71,6 +73,7 @@ export default class UserController {
             if (body.name)  update.name  = Sanitizer.string(body.name);
             if (body.email) update.email = Sanitizer.email(body.email);
             if (body.phone) update.phone = Sanitizer.string(body.phone);
+            if (body.avatar) update.avatar = body.avatar;
 
             // Check uniqueness for email / phone
             if (update.email || update.phone) {
@@ -99,6 +102,7 @@ export default class UserController {
                 email:  user.email,
                 phone:  user.phone,
                 avatar: user.avatar,
+                permissions: user.permissions,
             });
         } catch (err) {
             throw err;

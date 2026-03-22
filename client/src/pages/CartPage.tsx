@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Header from '../components/Header/Header';
 import Footer from '../components/Footer/Footer';
 import { useAuth } from '../contexts/AuthContext';
-import { getCart, removeFromCart, updateCartItem } from '../utils/api';
-import type { CartItem } from '../types/api';
+import { useCart } from '../contexts/CartContext';
 import {
   MapPin,
   Minus,
@@ -20,50 +19,8 @@ import { Link, useNavigate } from 'react-router-dom';
 export default function CartPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [subtotal, setSubtotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const { items: cartItems, subtotal, loading, updateQuantity: handleUpdateQuantity, removeFromCart: handleRemoveItem } = useCart();
   const [deliveryAddress] = useState('San Francisco, 94103');
-
-  const fetchCart = async () => {
-    try {
-      setLoading(true);
-      const data = await getCart();
-      setCartItems(data.items);
-      setSubtotal(data.subtotal);
-    } catch (error) {
-      console.error('Failed to fetch cart:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchCart();
-    } else if (!authLoading) {
-      setLoading(false);
-    }
-  }, [isAuthenticated, authLoading]);
-
-  const handleUpdateQuantity = async (productId: string, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    try {
-      await updateCartItem(productId, newQuantity);
-      await fetchCart();
-    } catch (error) {
-      console.error('Failed to update quantity:', error);
-    }
-  };
-
-  const handleRemoveItem = async (productId: string) => {
-    try {
-      await removeFromCart(productId);
-      await fetchCart();
-    } catch (error) {
-      console.error('Failed to remove item:', error);
-    }
-  };
 
   if (authLoading || (loading && isAuthenticated)) {
     return (

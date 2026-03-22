@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header/Header';
 import Footer from '../components/Footer/Footer';
-import { getProductById, addToCart } from '../utils/api';
+import { getProductById } from '../utils/api';
+import { useCart } from '../contexts/CartContext';
 import type { Product } from '../types/api';
 import { 
   Star, 
@@ -26,6 +27,7 @@ export default function ProductDetailsPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
+  const { addToCart } = useCart();
 
   const handleAddToCart = async (goToCart = false) => {
     if (!id) return;

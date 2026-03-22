@@ -80,7 +80,7 @@ export default class AuthController {
 
             return res.handler.created(res, "Account created successfully", {
                 token: jwt,
-                user: { id: user._id, name: user.name, email: user.email },
+                user: { id: user._id, name: user.name, email: user.email, permissions: user.permissions },
             });
         } catch (err) {
             throw err; // handled by global errorHandler (ZodError → 400)
@@ -112,7 +112,7 @@ export default class AuthController {
 
             return res.handler.success(res, "Login successful", {
                 token: jwt,
-                user: { id: user._id, name: user.name, email: user.email },
+                user: { id: user._id, name: user.name, email: user.email, permissions: user.permissions },
             });
         } catch (err) {
             throw err;

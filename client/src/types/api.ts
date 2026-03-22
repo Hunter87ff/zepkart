@@ -5,13 +5,15 @@ export interface User {
 	email: string;
 	phone: string;
 	avatar: string;
-	permissions?: {
-		admin: boolean;
-		manager: boolean;
-		user: boolean;
-		store_owner: boolean;
-	};
+	permissions?: number[];
 }
+
+export const PermissionLevels = {
+    admin: 777,
+    manager: 555,
+    store_owner: 444,
+    user: 333,
+} as const;
 
 export interface Store {
 	_id: string;

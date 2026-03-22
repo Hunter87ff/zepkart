@@ -12,6 +12,7 @@ import {
     Store as StoreIcon,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 
 const categories = [
     "For You", //default selected
@@ -26,12 +27,13 @@ export default function Header() {
     const [searchQuery, setSearchQuery] = useState('');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { user, logout, isAuthenticated, isStoreOwner } = useAuth();
+    const { itemCount } = useCart();
     const navigate = useNavigate();
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            console.log('Searching for:', searchQuery);
+            navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
         }
     };
 
@@ -76,11 +78,11 @@ export default function Header() {
                             >
                                 <ShoppingCart size={22} />
                                 <span className="absolute top-1 right-1 bg-accent text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                                    2
+                                    {itemCount}
                                 </span>
                             </Link>
                             <button
-                                onClick={() => isAuthenticated ? (user?.permissions?.admin || user?.permissions?.store_owner ? navigate('/store') : navigate('/orders')) : navigate('/login')}
+                                onClick={() => isAuthenticated ? (isStoreOwner ? navigate('/store') : navigate('/orders')) : navigate('/login')}
                                 className="p-2 text-gray-600 hover:text-primary transition-colors"
                             >
                                 <User size={22} />
@@ -140,7 +142,7 @@ export default function Header() {
                             <div className="relative">
                                 <ShoppingCart size={20} />
                                 <span className="absolute -top-1.5 -right-1.5 bg-accent text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
-                                    2
+                                    {itemCount}
                                 </span>
                             </div>
                             <span className="text-[10px] font-semibold mt-0.5">Cart</span>
@@ -159,16 +161,25 @@ export default function Header() {
                                 )}
                                 <div className="flex flex-col items-end mr-2">
                                     <span className="text-xs font-bold text-gray-900">{user?.name}</span>
-                                    <button 
-                                        onClick={logout}
-                                        className="text-[10px] text-primary hover:underline font-semibold"
-                                    >
-                                        Logout
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <Link 
+                                            to="/profile"
+                                            className="text-[10px] text-gray-500 hover:text-primary font-semibold"
+                                        >
+                                            Profile
+                                        </Link>
+                                        <span className="text-[10px] text-gray-300">•</span>
+                                        <button 
+                                            onClick={logout}
+                                            className="text-[10px] text-primary hover:underline font-semibold"
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 overflow-hidden">
+                                <Link to="/profile" className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 overflow-hidden hover:border-primary transition-colors">
                                     <img src={user?.avatar} alt={user?.name} className="w-full h-full object-cover" />
-                                </div>
+                                </Link>
                             </div>
                         ) : (
                             <button
@@ -216,12 +227,12 @@ export default function Header() {
                         <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-primary text-white">
                             <div className="flex items-center gap-2">
                                 {isAuthenticated ? (
-                                    <>
+                                    <Link to="/profile" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
                                         <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border border-white/30">
                                             <img src={user?.avatar} alt={user?.name} className="w-full h-full object-cover" />
                                         </div>
                                         <span className="font-semibold">{user?.name}</span>
-                                    </>
+                                    </Link>
                                 ) : (
                                     <>
                                         <User size={20} />
@@ -263,6 +274,12 @@ export default function Header() {
                                             <Link to="/cart" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
                                                 <ShoppingCart size={20} className="text-gray-400" />
                                                 My Cart
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link to="/profile" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                                                <User size={20} className="text-gray-400" />
+                                                My Profile
                                             </Link>
                                         </li>
                                     </ul>
