@@ -23,6 +23,12 @@ const createProductSchema = z.object({
         warranty:     z.string().optional(),
         cod:          z.boolean().optional(),
         delivery_fee: z.number().min(0).optional(),
+        offers:       z.array(z.string()).optional(),
+        service_highlights: z.array(z.object({
+            icon:    z.string(),
+            text:    z.string(),
+            subtext: z.string().optional(),
+        })).optional(),
     }).optional(),
 });
 

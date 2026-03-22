@@ -4,6 +4,7 @@ import Header from '../components/Header/Header';
 import Footer from '../components/Footer/Footer';
 import { getProductById } from '../utils/api';
 import { useCart } from '../contexts/CartContext';
+import apiClient from '../utils/api-client';
 import type { Product } from '../types/api';
 import { 
   Star, 
@@ -17,6 +18,18 @@ import {
   Check,
   ChevronRight
 } from 'lucide-react';
+
+const IconMap = {
+  Truck,
+  ShieldCheck,
+  RotateCcw,
+  Star,
+  ShoppingCart,
+  Zap,
+  Heart,
+  Share2,
+  Check
+};
 
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -51,13 +64,36 @@ export default function ProductDetailsPage() {
     }
   };
 
+  const handleToggleWishlist = async () => {
+    if (!id) return;
+    try {
+        if (isWishlisted) {
+            await apiClient.delete(`/wishlist/products/${id}`);
+            setIsWishlisted(false);
+        } else {
+            await apiClient.post(`/wishlist/products/${id}`);
+            setIsWishlisted(true);
+        }
+    } catch (err: any) {
+        console.error('Wishlist toggle failed:', err);
+        if (err.response?.status === 401) {
+            navigate('/login', { state: { from: { pathname: `/product/${id}` } } });
+        }
+    }
+  };
+
   useEffect(() => {
     async function fetchProduct() {
       if (!id) return;
       try {
         setLoading(true);
-        const data = await getProductById(id);
-        setProduct(data);
+        const [productData, wishlistRes] = await Promise.all([
+            getProductById(id),
+            apiClient.get('/wishlist').catch(() => ({ data: { data: { products: [] } } }))
+        ]);
+        setProduct(productData);
+        const wishlistProducts = wishlistRes.data.data.products || [];
+        setIsWishlisted(wishlistProducts.some((p: any) => p._id === id));
       } catch (err: any) {
         console.error('Failed to fetch product:', err);
         setError(err.message || 'Product not found');
@@ -141,9 +177,9 @@ export default function ProductDetailsPage() {
                   {/* Main Image */}
                   <div className="flex-1 aspect-[1/1] sm:aspect-[4/5] md:aspect-square lg:aspect-[4/5] bg-gray-50 rounded-2xl flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden group shadow-sm border border-gray-100">
                     <button 
-                      onClick={() => setIsWishlisted(!isWishlisted)}
+                      onClick={handleToggleWishlist}
                       className={`absolute top-4 right-4 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center transition-all z-10 ${
-                        isWishlisted ? 'text-danger' : 'text-gray-300 hover:text-danger'
+                        isWishlisted ? 'text-rose-500' : 'text-gray-300 hover:text-rose-500'
                       }`}
                     >
                       <Heart size={20} fill={isWishlisted ? 'currentColor' : 'none'} />
@@ -218,40 +254,39 @@ export default function ProductDetailsPage() {
                 )}
 
                 {/* Offers */}
-                <div className="bg-success-light/30 rounded-xl p-4 mb-8">
-                  <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    Available Offers
-                  </h3>
-                  <ul className="space-y-2">
-                    {[
-                      'Bank Offer 10% off on HDFC Bank Credit Cards, up to ₹1,250',
-                      'Special Price Get extra 15% off (price inclusive of cashback/coupon)',
-                      'Partner Offer Sign up for Zepkart Pay Later and get ₹100 Gift Card'
-                    ].map((offer, i) => (
-                      <li key={i} className="flex gap-2 text-sm text-gray-700">
-                        <Check size={16} className="text-success shrink-0" />
-                        <span>{offer}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {product.misc?.offers && product.misc.offers.length > 0 && (
+                  <div className="bg-success-light/30 rounded-xl p-4 mb-8">
+                    <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      Available Offers
+                    </h3>
+                    <ul className="space-y-2">
+                      {product.misc.offers.map((offer, i) => (
+                        <li key={i} className="flex gap-2 text-sm text-gray-700">
+                          <Check size={16} className="text-success shrink-0" />
+                          <span>{offer}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {/* Service Highlights */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                  {[
-                    { icon: Truck, text: 'Free Delivery', sub: 'by Tomorrow' },
-                    { icon: ShieldCheck, text: '1 Year Warranty', sub: 'Brand Assured' },
-                    { icon: RotateCcw, text: '7 Days Return', sub: 'Hassle-free' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex flex-col items-center p-3 rounded-xl bg-gray-50 text-center border border-gray-100">
-                      <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary mb-2 shadow-sm">
-                        <item.icon size={20} />
-                      </div>
-                      <span className="text-xs font-bold text-gray-900">{item.text}</span>
-                      <span className="text-[10px] text-gray-400">{item.sub}</span>
-                    </div>
-                  ))}
-                </div>
+                {product.misc?.service_highlights && product.misc.service_highlights.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                    {product.misc.service_highlights.map((item, i) => {
+                      const IconComponent = (IconMap as any)[item.icon] || Truck;
+                      return (
+                        <div key={i} className="flex flex-col items-center p-3 rounded-xl bg-gray-50 text-center border border-gray-100">
+                          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary mb-2 shadow-sm">
+                            <IconComponent size={20} />
+                          </div>
+                          <span className="text-xs font-bold text-gray-900">{item.text}</span>
+                          {item.subtext && <span className="text-[10px] text-gray-400">{item.subtext}</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Description */}
                 <div className="mb-8">

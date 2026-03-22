@@ -8,7 +8,7 @@ import type { Request, Response } from "express";
 // ─── Zod Schemas ─────────────────────────────────────────────────────────────
 
 const updateOrderSchema = z.object({
-    status: z.enum(["pending", "shipped", "delivered", "cancelled"]),
+    status: z.enum(["pending", "confirmed", "packed", "shipped", "delivered", "cancelled"]),
 });
 
 
@@ -82,7 +82,7 @@ export default class OrdersController {
         const cart = await Cart.findOne({ user: userId });
         if (!cart) return res.handler.badRequest(res, "No cart found");
 
-        const cartItems = await CartItem.find({ cart: cart._id }).populate<{
+        const cartItems = await CartItem.find({ cart: cart._id, status: "cart" }).populate<{
             product: {
                 _id: any;
                 price: number;
@@ -158,8 +158,8 @@ export default class OrdersController {
                     $inc: { stock: -item.quantity },
                 })
             ),
-            // Clear the cart
-            CartItem.deleteMany({ cart: cart._id }),
+            // Clear the cart (only cart items, not saved ones)
+            CartItem.deleteMany({ cart: cart._id, status: "cart" }),
         ]);
 
         return res.handler.created(res, "Order placed successfully", {

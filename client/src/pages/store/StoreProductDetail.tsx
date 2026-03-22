@@ -21,6 +21,8 @@ export default function StoreProductDetail() {
 	const [stock, setStock] = useState('');
 	const [status, setStatus] = useState<ProductStatus>('draft');
 	const [description, setDescription] = useState('');
+	const [offers, setOffers] = useState('');
+	const [serviceHighlights, setServiceHighlights] = useState('');
 	const [message, setMessage] = useState('');
 	const [loading, setLoading] = useState(true);
 
@@ -40,6 +42,8 @@ export default function StoreProductDetail() {
                     setStock(String(data.stock));
                     setStatus(data.status || 'draft');
                     setDescription(data.description);
+                    setOffers((data.misc?.offers || []).join('\n'));
+                    setServiceHighlights(JSON.stringify(data.misc?.service_highlights || [], null, 2));
                 }
             } catch (error) {
                 console.error('Failed to load product:', error);
@@ -64,6 +68,16 @@ export default function StoreProductDetail() {
                 stock: Number(stock),
                 status,
                 description,
+                misc: {
+                    offers: offers.split('\n').map(o => o.trim()).filter(Boolean),
+                    service_highlights: (() => {
+                        try {
+                            return JSON.parse(serviceHighlights);
+                        } catch (e) {
+                            return product.misc?.service_highlights || [];
+                        }
+                    })(),
+                }
             });
             setProduct(updated);
             setMessage('Product information updated.');
@@ -249,6 +263,27 @@ export default function StoreProductDetail() {
 									onChange={(e) => setDescription(e.target.value)}
 									className="mt-1.5 w-full px-3 py-2.5 rounded-lg border border-gray-200 min-h-28"
 									required
+								/>
+							</label>
+
+							<label className="text-sm text-gray-600 md:col-span-2">
+								Available Offers (one per line)
+								<textarea
+									value={offers}
+									onChange={(e) => setOffers(e.target.value)}
+									className="mt-1.5 w-full px-3 py-2.5 rounded-lg border border-gray-200 min-h-20"
+									placeholder="Bank Offer 10% off...
+Special Price Get extra 15% off..."
+								/>
+							</label>
+
+							<label className="text-sm text-gray-600 md:col-span-2">
+								Service Highlights (JSON format)
+								<textarea
+									value={serviceHighlights}
+									onChange={(e) => setServiceHighlights(e.target.value)}
+									className="mt-1.5 w-full px-3 py-2.5 rounded-lg border border-gray-200 min-h-24 font-mono text-xs"
+									placeholder='[{"icon": "Truck", "text": "Free Delivery", "subtext": "by Tomorrow"}]'
 								/>
 							</label>
 						</div>

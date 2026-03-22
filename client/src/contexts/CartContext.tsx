@@ -5,12 +5,14 @@ import { useAuth } from './AuthContext';
 
 interface CartContextType {
     items: CartItem[];
+    savedItems: CartItem[];
     loading: boolean;
     subtotal: number;
     itemCount: number;
     addToCart: (productId: string, quantity: number) => Promise<void>;
     removeFromCart: (productId: string) => Promise<void>;
     updateQuantity: (productId: string, quantity: number) => Promise<void>;
+    toggleSaveForLater: (productId: string) => Promise<void>;
     clearCart: () => Promise<void>;
     refreshCart: () => Promise<void>;
 }
@@ -19,6 +21,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [items, setItems] = useState<CartItem[]>([]);
+    const [savedItems, setSavedItems] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [subtotal, setSubtotal] = useState(0);
     const { isAuthenticated } = useAuth();
@@ -33,8 +36,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         try {
             const data = await getCart();
-            setItems(data.items);
-            setSubtotal(data.subtotal);
+            setItems(data.items || []);
+            setSavedItems(data.saved || []);
+            setSubtotal(data.subtotal || 0);
         } catch (error) {
             console.error('Failed to fetch cart:', error);
         } finally {
@@ -61,6 +65,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await refreshCart();
     };
 
+    const toggleSaveForLater = async (productId: string) => {
+        await (async () => {
+            const { toggleSaveForLater: apiToggleSaveForLater } = await import('../utils/api');
+            await apiToggleSaveForLater(productId);
+        })();
+        await refreshCart();
+    };
+
     const clearCart = async () => {
         await apiClearCart();
         await refreshCart();
@@ -70,12 +82,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const value: CartContextType = {
         items,
+        savedItems,
         loading,
         subtotal,
         itemCount,
         addToCart,
         removeFromCart,
         updateQuantity,
+        toggleSaveForLater,
         clearCart,
         refreshCart,
     };

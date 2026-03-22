@@ -32,6 +32,11 @@ const cartItemSchema = new Schema({
     total_price: {
         type: Number,
         required: true
+    },
+    status: {
+        type: String,
+        enum: ['cart', 'saved'],
+        default: 'cart'
     }
 })
 

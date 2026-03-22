@@ -132,10 +132,10 @@ export default function StoreOrderDetails() {
 									<div className="flex-1">
 										<p className="font-semibold text-gray-900 text-sm">{item.product?.name || 'Unknown Product'}</p>
 										<p className="text-xs text-gray-500 mt-1">
-											Qty: {item.quantity} · ₹{item.price.toFixed(0)} each
+											Qty: {item.quantity} · ₹{(item.price_at_purchase || 0).toFixed(0)} each
 										</p>
 									</div>
-									<p className="font-semibold text-gray-900 text-sm">₹{(item.price * item.quantity).toFixed(0)}</p>
+									<p className="font-semibold text-gray-900 text-sm">₹{((item.price_at_purchase || 0) * item.quantity).toFixed(0)}</p>
 								</article>
 							))}
 						</div>
@@ -143,11 +143,11 @@ export default function StoreOrderDetails() {
 						<div className="mt-5 border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-600">
 							<p className="flex justify-between">
 								<span>Subtotal</span>
-								<strong className="text-gray-800">₹{order.total_amount.toFixed(0)}</strong>
+								<strong className="text-gray-800">₹{(order.total_amount || 0).toFixed(0)}</strong>
 							</p>
 							<p className="flex justify-between text-base">
 								<span className="font-semibold text-gray-900">Order Total</span>
-								<strong className="text-gray-900">₹{order.total_amount.toFixed(0)}</strong>
+								<strong className="text-gray-900">₹{(order.total_amount || 0).toFixed(0)}</strong>
 							</p>
 						</div>
 					</div>

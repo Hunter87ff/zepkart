@@ -1,6 +1,21 @@
 import { Schema, model } from "mongoose";
 
 
+const ServiceHighlightSchema = new Schema({
+    icon: {
+        type: String,
+        required: true
+    },
+    text: {
+        type: String,
+        required: true
+    },
+    subtext: {
+        type: String,
+        required: false
+    }
+}, { _id: false });
+
 const MiscSchema = new Schema({
     refund : {
         type : String,
@@ -23,6 +38,16 @@ const MiscSchema = new Schema({
         type : Number,
         required: false,
         default: 0
+    },
+    offers: {
+        type: [String],
+        required: false,
+        default: []
+    },
+    service_highlights: {
+        type: [ServiceHighlightSchema],
+        required: false,
+        default: []
     }
 }, { _id : false })
 

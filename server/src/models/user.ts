@@ -32,8 +32,13 @@ const userSchema = new Schema({
     permissions : {
         type : [Number],
         default : [333] // PermissionLevels.user
+    },
+    address: {
+        address_line: { type: String, default: "" },
+        city: { type: String, default: "" },
+        state: { type: String, default: "" },
+        pincode: { type: String, default: "" }
     }
-    
 })
 
 export const User = model("User", userSchema);

@@ -208,11 +208,12 @@ export async function deleteProduct(id: string | number): Promise<void> {
 
 // --- Cart ---
 
-export async function getCart(): Promise<{ cart: Cart; items: CartItem[]; subtotal: number }> {
-	const res = await apiClient.get<ApiResponse<{ cart: Cart; items: CartItem[]; subtotal: number }>>('/cart/');
+export async function getCart(): Promise<{ cart: Cart; items: CartItem[]; saved: CartItem[]; subtotal: number }> {
+	const res = await apiClient.get<ApiResponse<{ cart: Cart; items: CartItem[]; saved: CartItem[]; subtotal: number }>>('/cart/');
 	return {
 		cart: mapCartItem(res.data.data.cart) as any,
 		items: (res.data.data.items || []).map(mapCartItem),
+		saved: (res.data.data.saved || []).map(mapCartItem),
 		subtotal: res.data.data.subtotal,
 	};
 }
@@ -233,6 +234,10 @@ export async function updateCartItem(productId: string, quantity: number): Promi
 
 export async function clearCart(): Promise<void> {
 	await apiClient.post('/cart/clear');
+}
+
+export async function toggleSaveForLater(productId: string): Promise<void> {
+    await apiClient.post('/cart/save-later', { productId });
 }
 
 // --- Orders ---

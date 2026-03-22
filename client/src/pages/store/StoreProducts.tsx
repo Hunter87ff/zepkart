@@ -23,6 +23,8 @@ type ProductFormState = {
 	image: string;
 	description: string;
 	tags: string;
+	offers: string;
+	service_highlights: string;
 };
 
 const emptyForm: ProductFormState = {
@@ -36,6 +38,8 @@ const emptyForm: ProductFormState = {
 	image: '',
 	description: '',
 	tags: '',
+	offers: '',
+	service_highlights: '',
 };
 
 export default function StoreProducts() {
@@ -96,6 +100,8 @@ export default function StoreProducts() {
 			image: product.image || (product.images?.[0] || ''),
 			description: product.description,
 			tags: (product.tags || []).join(', '),
+			offers: (product.misc?.offers || []).join('\n'),
+			service_highlights: JSON.stringify(product.misc?.service_highlights || [], null, 2),
 		});
 		setMessage('');
 		setShowForm(true);
@@ -120,6 +126,16 @@ export default function StoreProducts() {
 				.split(',')
 				.map((tag) => tag.trim())
 				.filter(Boolean),
+			misc: {
+				offers: form.offers.split('\n').map(o => o.trim()).filter(Boolean),
+				service_highlights: (() => {
+					try {
+						return JSON.parse(form.service_highlights);
+					} catch (e) {
+						return [];
+					}
+				})(),
+			}
 		};
 
 		try {
@@ -429,6 +445,26 @@ export default function StoreProducts() {
 									/>
 								</label>
 
+								<label className="text-sm text-gray-600 md:col-span-2">
+									Available Offers (one per line)
+									<textarea
+										className="mt-1.5 w-full px-3 py-2.5 rounded-lg border border-gray-200 min-h-20"
+										value={form.offers}
+										onChange={(e) => setForm((prev) => ({ ...prev, offers: e.target.value }))}
+										placeholder="Bank Offer 10% off...
+Special Price Get extra 15% off..."
+									/>
+								</label>
+
+								<label className="text-sm text-gray-600 md:col-span-2">
+									Service Highlights (JSON format)
+									<textarea
+										className="mt-1.5 w-full px-3 py-2.5 rounded-lg border border-gray-200 min-h-24 font-mono text-xs"
+										value={form.service_highlights}
+										onChange={(e) => setForm((prev) => ({ ...prev, service_highlights: e.target.value }))}
+										placeholder='[{"icon": "Truck", "text": "Free Delivery", "subtext": "by Tomorrow"}]'
+									/>
+								</label>
 								<div className="md:col-span-2 flex items-center gap-3 mt-1">
 									<button
 										type="submit"

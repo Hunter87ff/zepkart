@@ -44,13 +44,16 @@ export default class CartController {
 
         const cart = await getOrCreateCart(userId);
 
-        const items = await CartItem.find({ cart: cart._id })
-            .populate("product", "name images price discount");
+        const allItems = await CartItem.find({ cart: cart._id })
+            .populate("product", "name images price discount image mrp stock store");
 
-        // Compute totals
+        const items = allItems.filter(item => item.status === 'cart');
+        const saved = allItems.filter(item => item.status === 'saved');
+
+        // Compute totals for cart items only
         const subtotal = items.reduce((sum, item) => sum + item.total_price, 0);
 
-        return res.handler.success(res, "Cart retrieved", { cart, items, subtotal });
+        return res.handler.success(res, "Cart retrieved", { cart, items, saved, subtotal });
     }
 
 
@@ -89,6 +92,7 @@ export default class CartController {
 
             if (existingItem) {
                 existingItem.quantity += quantity;
+                existingItem.status = 'cart';
                 existingItem.total_price = effectivePrice * existingItem.quantity;
                 await existingItem.save();
                 return res.handler.success(res, "Cart item updated", existingItem);
@@ -105,6 +109,9 @@ export default class CartController {
 
             return res.handler.created(res, "Item added to cart", item);
         } catch (err) {
+            if (err instanceof z.ZodError) {
+                return res.handler.badRequest(res, "Validation Error", err.issues);
+            }
             throw err;
         }
     }
@@ -185,5 +192,33 @@ export default class CartController {
 
         await CartItem.deleteMany({ cart: cart._id });
         return res.handler.success(res, "Cart cleared");
+    }
+
+
+    /**
+     * @route  POST /cart/save-later
+     * @access Auth
+     * Body: { productId }
+     */
+    static async toggleSaveForLater(req: Request, res: Response) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) return res.handler.unAuthorized(res, "Unauthorized");
+
+            const { productId } = removeFromCartSchema.parse(req.body);
+
+            const cart = await Cart.findOne({ user: userId });
+            if (!cart) return res.handler.notFound(res, "Cart not found");
+
+            const item = await CartItem.findOne({ cart: cart._id, product: productId });
+            if (!item) return res.handler.notFound(res, "Item not found in cart/saved");
+
+            item.status = item.status === 'cart' ? 'saved' : 'cart';
+            await item.save();
+
+            return res.handler.success(res, `Item ${item.status === 'saved' ? 'saved for later' : 'moved to cart'}`, item);
+        } catch (err) {
+            throw err;
+        }
     }
 }

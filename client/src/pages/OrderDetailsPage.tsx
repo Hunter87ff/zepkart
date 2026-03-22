@@ -24,6 +24,22 @@ const statusConfig = {
     border: 'border-blue-200',
     desc: 'Package is on its way to you.'
   },
+  packed: {
+    icon: Package,
+    label: 'Packed',
+    color: 'text-warning',
+    bg: 'bg-amber-50',
+    border: 'border-amber-200',
+    desc: 'Your order has been packed and is ready for shipping.'
+  },
+  confirmed: {
+    icon: CheckCircle,
+    label: 'Confirmed',
+    color: 'text-success',
+    bg: 'bg-green-50',
+    border: 'border-green-200',
+    desc: 'Order has been confirmed and is being processed.'
+  },
   processing: {
     icon: Package,
     label: 'Processing',

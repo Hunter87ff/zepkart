@@ -6,6 +6,12 @@ export interface User {
 	phone: string;
 	avatar: string;
 	permissions?: number[];
+	address?: {
+		address_line?: string;
+		city?: string;
+		state?: string;
+		pincode?: string;
+	};
 }
 
 export const PermissionLevels = {
@@ -35,12 +41,20 @@ export interface Store {
 	};
 }
 
+export interface ServiceHighlight {
+	icon: string;
+	text: string;
+	subtext?: string;
+}
+
 export interface MiscInfo {
 	refund?: string;
 	return?: string;
 	warranty?: string;
 	cod?: boolean;
 	delivery_fee?: number;
+	offers?: string[];
+	service_highlights?: ServiceHighlight[];
 }
 
 export interface Product {

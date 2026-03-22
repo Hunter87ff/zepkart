@@ -13,6 +13,12 @@ const updateMeSchema = z.object({
     email: z.string().email().optional(),
     phone: z.string().regex(/^\d{10}$/, "Phone must be a 10-digit number").optional(),
     avatar: z.string().url("Avatar must be a valid URL").optional(),
+    address: z.object({
+        address_line: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        pincode: z.string().optional(),
+    }).optional(),
 }).refine(data => Object.keys(data).length > 0, {
     message: "At least one field is required to update",
 });
@@ -49,6 +55,7 @@ export default class UserController {
             email:  user.email,
             phone:  user.phone,
             avatar: user.avatar,
+            address: user.address,
             permissions: user.permissions,
         };
 
@@ -74,6 +81,7 @@ export default class UserController {
             if (body.email) update.email = Sanitizer.email(body.email);
             if (body.phone) update.phone = Sanitizer.string(body.phone);
             if (body.avatar) update.avatar = body.avatar;
+            if (body.address) (update as any).address = body.address;
 
             // Check uniqueness for email / phone
             if (update.email || update.phone) {
@@ -102,9 +110,13 @@ export default class UserController {
                 email:  user.email,
                 phone:  user.phone,
                 avatar: user.avatar,
+                address: user.address,
                 permissions: user.permissions,
             });
         } catch (err) {
+            if (err instanceof z.ZodError) {
+                return res.handler.badRequest(res, "Validation Error", err.issues);
+            }
             throw err;
         }
     }
@@ -129,6 +141,9 @@ export default class UserController {
 
             return res.handler.success(res, "Avatar updated", { avatar: user.avatar });
         } catch (err) {
+            if (err instanceof z.ZodError) {
+                return res.handler.badRequest(res, "Validation Error", err.issues);
+            }
             throw err;
         }
     }

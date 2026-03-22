@@ -17,6 +17,7 @@ import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import ProfilePage from './pages/ProfilePage';
 import SearchPage from './pages/SearchPage';
+import WishlistPage from './pages/WishlistPage';
 import Store from './pages/store/Store';
 import StoreProducts from './pages/store/StoreProducts';
 import StoreProductDetail from './pages/store/StoreProductDetail';
@@ -58,6 +59,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <OrderDetailsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/wishlist" 
+              element={
+                <ProtectedRoute>
+                  <WishlistPage />
                 </ProtectedRoute>
               } 
             />

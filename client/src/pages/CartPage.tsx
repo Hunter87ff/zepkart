@@ -18,10 +18,23 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function CartPage() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { items: cartItems, subtotal, loading, updateQuantity: handleUpdateQuantity, removeFromCart: handleRemoveItem, refreshCart } = useCart();
-  const [deliveryAddress] = useState('San Francisco, 94103');
+  const { 
+    items: cartItems, 
+    savedItems,
+    subtotal, 
+    loading, 
+    updateQuantity: handleUpdateQuantity, 
+    removeFromCart: handleRemoveItem, 
+    toggleSaveForLater: handleToggleSave,
+    refreshCart 
+  } = useCart();
+  
+  const deliveryAddress = user?.address?.city 
+    ? `${user.address.city}, ${user.address.pincode}` 
+    : 'Select Address';
+    
   const [placing, setPlacing] = useState(false);
 
   const handlePlaceOrder = async () => {
@@ -75,7 +88,7 @@ export default function CartPage() {
     );
   }
 
-  if (cartItems.length === 0) {
+  if (cartItems.length === 0 && savedItems.length === 0) {
     return (
       <>
         <Header />
@@ -128,6 +141,7 @@ export default function CartPage() {
                 </div>
                 <button
                   id="change-address"
+                  onClick={() => navigate('/profile')}
                   className="px-4 py-1.5 border border-primary text-primary text-sm font-semibold rounded-lg hover:bg-primary-light transition-colors"
                 >
                   CHANGE
@@ -135,105 +149,118 @@ export default function CartPage() {
               </div>
 
               {/* Cart Items */}
-              <div className="bg-white rounded-xl shadow-card divide-y divide-gray-100 overflow-hidden">
-                {cartItems.map((item) => {
-                  const discountPercent = item.product.discount?.[0] || 0;
-                  const mrp = item.product.mrp || Math.round(item.product.price / (1 - discountPercent / 100));
-                  
-                  return (
-                    <div key={item._id} className="p-5">
-                      <div className="flex gap-4">
-                        {/* Product Image */}
-                        <div className="shrink-0 w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] bg-gray-50 rounded-xl flex items-center justify-center p-2">
-                          <img
-                            src={item.product.image || (item.product.images && item.product.images[0])}
-                            alt={item.product.name}
-                            className="max-w-full max-h-full object-contain"
-                          />
-                        </div>
-
-                        {/* Product Details */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <h3 className="font-medium text-gray-900 text-sm sm:text-base leading-snug mb-1">
-                                <Link to={`/product/${item.product._id}`} className="hover:text-primary">
-                                    {item.product.name}
-                                </Link>
-                              </h3>
-                              <p className="text-xs text-gray-400">
-                                Seller: {typeof item.product.store === 'object' ? item.product.store.name : 'Verified Seller'}
-                              </p>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <p className="text-xs text-gray-400">
-                                Delivery within{' '}
-                                <span className="font-medium text-gray-700">
-                                  2-4 Days
-                                </span>
-                              </p>
-                            </div>
+              {cartItems.length > 0 ? (
+                <div className="bg-white rounded-xl shadow-card divide-y divide-gray-100 overflow-hidden">
+                  {cartItems.map((item) => {
+                    const discountPercent = item.product.discount?.[0] || 0;
+                    const mrp = item.product.mrp || Math.round(item.product.price / (1 - discountPercent / 100));
+                    
+                    return (
+                      <div key={item._id} className="p-5">
+                        <div className="flex gap-4">
+                          {/* Product Image */}
+                          <div className="shrink-0 w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] bg-gray-50 rounded-xl flex items-center justify-center p-2">
+                            <img
+                              src={item.product.image || (item.product.images && item.product.images[0])}
+                              alt={item.product.name}
+                              className="max-w-full max-h-full object-contain"
+                            />
                           </div>
 
-                          {item.product.stock < 10 && item.product.stock > 0 && (
-                            <p className="text-xs text-danger font-semibold mt-1.5">
-                              Only {item.product.stock} left in stock!
-                            </p>
-                          )}
+                          {/* Product Details */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <h3 className="font-medium text-gray-900 text-sm sm:text-base leading-snug mb-1">
+                                  <Link to={`/product/${item.product._id}`} className="hover:text-primary">
+                                      {item.product.name}
+                                  </Link>
+                                </h3>
+                                <p className="text-xs text-gray-400">
+                                  Seller: {typeof item.product.store === 'object' ? item.product.store.name : 'Verified Seller'}
+                                </p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-xs text-gray-400">
+                                  Delivery within{' '}
+                                  <span className="font-medium text-gray-700">
+                                    2-4 Days
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
 
-                          {/* Price */}
-                          <div className="flex items-baseline gap-2 mt-3">
-                            <span className="text-sm text-gray-400 line-through">
-                              ₹{mrp.toFixed(0)}
-                            </span>
-                            <span className="text-lg font-bold text-gray-900">
-                              ₹{item.product.price.toFixed(0)}
-                            </span>
-                            {discountPercent > 0 && (
-                                <span className="text-sm font-semibold text-success">
-                                    {discountPercent}% Off
-                                </span>
+                            {item.product.stock < 10 && item.product.stock > 0 && (
+                              <p className="text-xs text-danger font-semibold mt-1.5">
+                                Only {item.product.stock} left in stock!
+                              </p>
                             )}
-                          </div>
 
-                          {/* Actions */}
-                          <div className="flex items-center gap-4 mt-4 flex-wrap">
-                            {/* Quantity */}
-                            <div className="flex items-center gap-0.5">
-                              <button
-                                onClick={() => handleUpdateQuantity(item.product._id, item.quantity - 1)}
-                                className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-30"
-                                disabled={item.quantity <= 1}
-                              >
-                                <Minus size={14} />
-                              </button>
-                              <span className="w-10 text-center text-sm font-semibold text-gray-800">
-                                {item.quantity}
+                            {/* Price */}
+                            <div className="flex items-baseline gap-2 mt-3">
+                              <span className="text-sm text-gray-400 line-through">
+                                ₹{mrp.toFixed(0)}
                               </span>
-                              <button
-                                onClick={() => handleUpdateQuantity(item.product._id, item.quantity + 1)}
-                                className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 hover:bg-gray-50 transition-all"
-                              >
-                                <Plus size={14} />
-                              </button>
+                              <span className="text-lg font-bold text-gray-900">
+                                ₹{item.product.price.toFixed(0)}
+                              </span>
+                              {discountPercent > 0 && (
+                                  <span className="text-sm font-semibold text-success">
+                                      {discountPercent}% Off
+                                  </span>
+                              )}
                             </div>
 
-                            <button className="flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-gray-800 transition-colors uppercase tracking-wide">
-                              <Bookmark size={14} /> Save for later
-                            </button>
-                            <button
-                              onClick={() => handleRemoveItem(item.product._id)}
-                              className="flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-danger transition-colors uppercase tracking-wide"
-                            >
-                              <Trash2 size={14} /> Remove
-                            </button>
+                            {/* Actions */}
+                            <div className="flex items-center gap-4 mt-4 flex-wrap">
+                              {/* Quantity */}
+                              <div className="flex items-center gap-0.5">
+                                <button
+                                  onClick={() => handleUpdateQuantity(item.product._id, item.quantity - 1)}
+                                  className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-30"
+                                  disabled={item.quantity <= 1}
+                                >
+                                  <Minus size={14} />
+                                </button>
+                                <span className="w-10 text-center text-sm font-semibold text-gray-800">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  onClick={() => handleUpdateQuantity(item.product._id, item.quantity + 1)}
+                                  className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-gray-300 hover:bg-gray-50 transition-all"
+                                >
+                                  <Plus size={14} />
+                                </button>
+                              </div>
+
+                              <button 
+                                  onClick={() => handleToggleSave(item.product._id)}
+                                  className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary-dark transition-colors uppercase tracking-wide"
+                              >
+                                <Bookmark size={14} /> Save for later
+                              </button>
+                              <button
+                                onClick={() => handleRemoveItem(item.product._id)}
+                                className="flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-danger transition-colors uppercase tracking-wide"
+                              >
+                                <Trash2 size={14} /> Remove
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl shadow-card p-12 text-center flex flex-col items-center">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-4">
+                        <ShoppingCart size={32} />
                     </div>
-                  );
-                })}
-              </div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">Your cart is empty</h3>
+                    <p className="text-gray-500 text-sm mb-6">But you have items saved for later below!</p>
+                </div>
+              )}
 
               {/* Add from Wishlist */}
               <button
@@ -244,6 +271,55 @@ export default function CartPage() {
                 <PlusCircle size={18} />
                 Continue Shopping
               </button>
+
+              {/* Saved Items */}
+              {savedItems.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Bookmark size={20} className="text-primary" />
+                    Saved for Later ({savedItems.length})
+                  </h3>
+                  <div className="bg-white rounded-xl shadow-card divide-y divide-gray-100 overflow-hidden">
+                    {savedItems.map((item) => (
+                      <div key={item._id} className="p-5 opacity-80 hover:opacity-100 transition-opacity">
+                        <div className="flex gap-4">
+                          <div className="shrink-0 w-[80px] h-[80px] bg-gray-50 rounded-lg flex items-center justify-center p-2">
+                            <img
+                              src={item.product.image || (item.product.images && item.product.images[0])}
+                              alt={item.product.name}
+                              className="max-w-full max-h-full object-contain grayscale-[0.5]"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-700 text-sm truncate">
+                              {item.product.name}
+                            </h4>
+                            <div className="flex items-baseline gap-2 mt-1">
+                              <span className="text-base font-bold text-gray-900">
+                                ₹{item.product.price.toFixed(0)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-4 mt-3">
+                              <button
+                                onClick={() => handleToggleSave(item.product._id)}
+                                className="text-xs font-bold text-primary uppercase tracking-widest hover:underline"
+                              >
+                                Move to cart
+                              </button>
+                              <button
+                                onClick={() => handleRemoveItem(item.product._id)}
+                                className="text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-danger"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Right Column - Price Details */}

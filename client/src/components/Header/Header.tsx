@@ -10,6 +10,7 @@ import {
     ChevronDown,
     LogOut,
     Store as StoreIcon,
+    Heart,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
@@ -132,6 +133,15 @@ export default function Header() {
                         >
                             <ClipboardList size={20} />
                             <span className="text-[10px] font-semibold mt-0.5">Orders</span>
+                        </Link>
+
+                        <Link
+                            to="/wishlist"
+                            id="nav-wishlist"
+                            className="flex flex-col items-center px-3 py-1.5 rounded-lg hover:bg-gray-50 text-gray-600 hover:text-primary transition-all"
+                        >
+                            <Heart size={20} />
+                            <span className="text-[10px] font-semibold mt-0.5">Wishlist</span>
                         </Link>
 
                         <Link
@@ -268,6 +278,12 @@ export default function Header() {
                                             <Link to="/orders" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg">
                                                 <ClipboardList size={20} className="text-gray-400" />
                                                 My Orders
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link to="/wishlist" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
+                                                <Heart size={20} className="text-gray-400" />
+                                                My Wishlist
                                             </Link>
                                         </li>
                                         <li>
