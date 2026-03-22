@@ -23,6 +23,7 @@ import StoreProducts from './pages/store/StoreProducts';
 import StoreProductDetail from './pages/store/StoreProductDetail';
 import StoreOrders from './pages/store/StoreOrders';
 import StoreOrderDetails from './pages/store/StoreOrderDetails';
+import NotFoundPage from './pages/NotFoundPage';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
@@ -123,6 +124,8 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            {/* 404 Route */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </BrowserRouter>
       </CartProvider>
