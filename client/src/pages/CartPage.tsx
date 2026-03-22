@@ -3,6 +3,7 @@ import Header from '../components/Header/Header';
 import Footer from '../components/Footer/Footer';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { createOrder } from '../utils/api';
 import {
   MapPin,
   Minus,
@@ -19,8 +20,24 @@ import { Link, useNavigate } from 'react-router-dom';
 export default function CartPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { items: cartItems, subtotal, loading, updateQuantity: handleUpdateQuantity, removeFromCart: handleRemoveItem } = useCart();
+  const { items: cartItems, subtotal, loading, updateQuantity: handleUpdateQuantity, removeFromCart: handleRemoveItem, refreshCart } = useCart();
   const [deliveryAddress] = useState('San Francisco, 94103');
+  const [placing, setPlacing] = useState(false);
+
+  const handlePlaceOrder = async () => {
+    setPlacing(true);
+    try {
+      await createOrder();
+      await refreshCart();
+      alert('Order placed successfully!');
+      navigate('/orders');
+    } catch (error: any) {
+      console.error('Failed to place order:', error);
+      alert(error.response?.data?.message || 'Failed to place order. Please try again.');
+    } finally {
+      setPlacing(false);
+    }
+  };
 
   if (authLoading || (loading && isAuthenticated)) {
     return (
@@ -270,9 +287,11 @@ export default function CartPage() {
 
                 <button
                   id="place-order"
-                  className="w-full py-3.5 bg-yellow hover:bg-yellow-dark text-gray-900 font-bold text-base rounded-xl transition-all duration-250 hover:shadow-lg hover:-translate-y-0.5 uppercase tracking-wide"
+                  onClick={handlePlaceOrder}
+                  disabled={placing}
+                  className="w-full py-3.5 bg-yellow hover:bg-yellow-dark text-gray-900 font-bold text-base rounded-xl transition-all duration-250 hover:shadow-lg hover:-translate-y-0.5 uppercase tracking-wide disabled:opacity-50"
                 >
-                  Place Order
+                  {placing ? 'Placing Order...' : 'Place Order'}
                 </button>
 
                 <div className="flex items-center justify-center gap-5 mt-4 text-xs text-gray-400">

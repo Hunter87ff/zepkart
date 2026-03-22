@@ -268,9 +268,13 @@ export async function getOrderById(id: string): Promise<{ order: Order; items: a
 	};
 }
 
-export async function createOrder(): Promise<Order> {
-	const res = await apiClient.post<ApiResponse<Order>>('/orders/');
-	return mapOrder(res.data.data);
+export async function createOrder(): Promise<{ order: Order; items: any[]; total_amount: number }> {
+	const res = await apiClient.post<ApiResponse<{ order: any; items: any[]; total_amount: number }>>('/orders/');
+	return {
+		order: mapOrder(res.data.data.order),
+		items: res.data.data.items,
+		total_amount: res.data.data.total_amount,
+	};
 }
 
 // --- Wishlist ---

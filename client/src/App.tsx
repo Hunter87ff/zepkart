@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import CartPage from './pages/CartPage';
 import OrdersPage from './pages/OrdersPage';
 import ProductDetailsPage from './pages/ProductDetailsPage';
+import OrderDetailsPage from './pages/OrderDetailsPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import FAQPage from './pages/FAQPage';
@@ -49,6 +50,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <OrdersPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/orders/:id" 
+              element={
+                <ProtectedRoute>
+                  <OrderDetailsPage />
                 </ProtectedRoute>
               } 
             />
