@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { createStore } from '../utils/api';
 
 export default function BecomeSellerPage() {
-  const { user, isAuthenticated, refreshUser } = useAuth();
+  const { user, isAuthenticated, isStoreOwner, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,7 +17,7 @@ export default function BecomeSellerPage() {
       return;
     }
 
-    if (user?.permissions?.store_owner || user?.permissions?.admin) {
+    if (isStoreOwner) {
       navigate('/store');
       return;
     }

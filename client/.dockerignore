@@ -8,12 +8,10 @@ dist/
 .gitignore
 .dockerignore
 Dockerfile
+nginx.conf
 
 # Exclude documentation and other metadata
 README.md
 LICENSE
-tests/
-
-# Bun and package lockfiles (will be copied separately for caching)
+package-lock.json
 # bun.lock*
-# package-lock.json

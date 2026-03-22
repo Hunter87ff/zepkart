@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # Backend Server
+  server:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: zepkart-server
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./server/.env
+    restart: unless-stopped
+    networks:
+      - zepkart-network
+
+  # Frontend Client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: zepkart-client
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+    networks:
+      - zepkart-network
+
+# Networks for communication
+networks:
+  zepkart-network:
+    driver: bridge
